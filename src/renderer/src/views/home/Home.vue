@@ -5,9 +5,9 @@
       <div class="navigate-container">
         <Navigate/>
       </div>
-      <TitleBar></TitleBar>
       <!-- 展示区 -->
       <div class="main-content">
+        <TitleBar></TitleBar>
         <RouterView></RouterView>
       </div>
     </div>
@@ -44,10 +44,18 @@ import TitleBar from '@/components/TitleBar.vue';
   .navigate-container{
     /* 宽度为20% */
     width: 9%;
+    height: 100%;
     background-color: #F3F3F4;
     /* 垂直居中 */
     display: flex;
     justify-content: center;
     align-items: center;
   }
+  .main-content{
+    height: 100%;
+    width: 91%;
+    display: flex;
+    flex-direction: column;
+  }
+
 </style>

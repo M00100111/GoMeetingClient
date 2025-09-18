@@ -8,6 +8,7 @@ declare global {
       resizeWindow: (width: number, height: number) => void
       minimizeWindow: () => void
       closeWindow: () => void
+      createMeetingWindow: () => void
     }
   }
 }

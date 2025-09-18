@@ -6,10 +6,10 @@
 
     <div class="middle">
       <!-- 路由路径 -->
-      <RouterLink class="item" to="/meeting">
+      <RouterLink class="item" to="meeting">
         <img class="icon" src="@/assets/icon/meeting.svg" alt="meeting">
       </RouterLink>
-      <RouterLink class="item" to="/social">
+      <RouterLink class="item" to="social">
         <img class="icon" src="@/assets/icon/social.svg" alt="social">
       </RouterLink>
     </div>
@@ -54,11 +54,12 @@
   .avatar {
     width: 40px;
     height: 40px;
-    border-radius: 50%;    
+    border-radius: 50%;   
   }
 
   .middle{
     height: 50%;
+    width: 100%;
     align-self: center;
     display: flex;
     flex-direction:column;
@@ -89,4 +90,10 @@
     align-items: center;
     justify-content:space-evenly;
   }
+  .icon, .avatar {
+    -webkit-app-region: no-drag;
+    cursor:pointer
+  }
+
+  
 </style>

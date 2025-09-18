@@ -12,6 +12,12 @@ import router from '@/router/index'
 import { pinia } from './store/index.js'
 
 const app = createApp(App)
+
+// 添加路由监听来验证当前路径
+router.isReady().then(() => {
+  console.log('Current route path:', router.currentRoute.value.path)
+})
+
 //使用路由器
 app.use(router)
 //使用pinia

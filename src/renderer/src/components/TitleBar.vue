@@ -11,7 +11,7 @@
 
 <script setup lang="ts" name="TitleBar">
 const minimizeWindow = () => {
-  window.MyAPI.minimizeWindow()
+  (window as any).MyAPI.minimizeWindow()
 }
 const closeWindow = () => {
   (window as any).MyAPI.closeWindow()

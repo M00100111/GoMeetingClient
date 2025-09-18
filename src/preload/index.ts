@@ -18,7 +18,8 @@ if (process.contextIsolated) {
         ipcRenderer.send('resize-window', width, height)
       },
       minimizeWindow: () => ipcRenderer.send('window-control', 'minimize'),
-      closeWindow: () => ipcRenderer.send('window-control', 'close')
+      closeWindow: () => ipcRenderer.send('window-control', 'close'),
+      createMeetingWindow: () => ipcRenderer.invoke('create-meeting-window')
     })
   } catch (error) {
     console.error(error)

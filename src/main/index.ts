@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-
+// 主渲染线程
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -49,6 +49,36 @@ function createWindow(): void {
   }
 }
 
+// 新打开渲染进程页面
+function createMeetingWindow(): void {
+  const meetingWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    show: false,
+    autoHideMenuBar: true,
+    frame: false,
+    transparent: true,
+    ...(process.platform === 'linux' ? { icon } : {}),
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false
+    }
+  })
+
+  meetingWindow.on('ready-to-show', () => {
+    meetingWindow.show()
+  })
+
+  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+    meetingWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/#/login`)
+  } else {
+    meetingWindow.loadFile(join(__dirname, '../renderer/index.html'), {
+      hash: '#/login'
+    })
+  }
+}
+
+// 应用准备就绪时
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -91,6 +121,12 @@ app.whenReady().then(() => {
     }
   })
 
+  // IPC 处理：创建会议窗口
+  ipcMain.handle('create-meeting-window', async () => {
+    return createMeetingWindow()
+  })
+
+  // 开启主渲染线程
   createWindow()
 
   app.on('activate', function () {
