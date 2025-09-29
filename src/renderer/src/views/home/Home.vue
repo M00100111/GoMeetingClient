@@ -10,6 +10,28 @@
         <TitleBar></TitleBar>
         <RouterView></RouterView>
       </div>
+      
+      <!-- 普通确认模态框 (在父组件中挂载) -->
+      <BaseDialog
+        v-model:visible="confirmDialog.visible"
+        :title="confirmDialog.title"
+        :confirmText="confirmDialog.confirmText"
+        :cancelText="confirmDialog.cancelText"
+        @confirm="confirmDialog.handleConfirm"
+        @cancel="confirmDialog.handleCancel"
+      >
+        <p>{{ confirmDialog.content }}</p>
+      </BaseDialog>
+
+      <!-- 提交表单模态框 (在父组件中挂载) -->
+      <BaseDialog
+        v-model:visible="formDialog.visible"
+        :title="formDialog.title"
+        @confirm="handleFormConfirm"
+        @cancel="formDialog.close"
+      >
+        <UserForm ref="userFormRef" />
+      </BaseDialog>
 
     </div>
   </div>
@@ -17,10 +39,17 @@
 
 <script setup lang="ts" name="Home">
 //引入路由展示区标签
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import Navigate from '@/components/Navigate.vue';
 import TitleBar from '@/components/TitleBar.vue';
+import { useConfirmDialog } from '@/store/confirmDialog'
+import { useFormDialog } from '@/store/formDialog'
+import BaseDialog from '@/components/BaseDialog.vue'
+import UserForm from '@/components/StartMeetingForm.vue'
+const confirmDialog = useConfirmDialog()
+const formDialog = useFormDialog()
+const userFormRef = ref<InstanceType<typeof UserForm> | null>(null)
 import { websocketService } from '@/utils/websocket'
 console.log("挂载home组件");
 // 检查并建立连接
@@ -51,7 +80,7 @@ const registerGlobalHandlers = () => {
   //   console.log('全局收到聊天消息:', data)
   //   // 这里可以触发全局事件总线或更新全局状态
   //   // 比如显示全局通知、更新未读消息数等
-    
+  
   //   // 根据你的MessageHandler类型，需要返回boolean
   //   return true // 处理成功
   // })
@@ -60,7 +89,7 @@ const registerGlobalHandlers = () => {
   // websocketService.registerHandlers(MessageMethod.Notification_Method, (data: any) => {
   //   console.log('全局收到通知:', data)
   //   // 处理全局通知，比如显示Toast通知
-    
+  
   //   return true
   // })
 
@@ -68,7 +97,7 @@ const registerGlobalHandlers = () => {
   // websocketService.registerHandlers(MessageMethod.Meeting_Start_Notice_Method, (data: any) => {
   //   console.log('会议开始:', data)
   //   // 可以跳转到会议页面或显示会议提醒
-    
+  
   //   return true
   // })
 
@@ -76,11 +105,17 @@ const registerGlobalHandlers = () => {
   // websocketService.registerHandlers(MessageMethod.Meeting_Message_Method, (data: any) => {
   //   console.log('会议消息:', data)
   //   // 处理会议中的实时消息
-    
+  
   //   return true
   // })
 }
-
+// 处理表单确认
+const handleFormConfirm = () => {
+  if (userFormRef.value) {
+    const formData = userFormRef.value.getFormData()
+    formDialog.handleSubmit(formData)
+  }
+}
 </script>
 
 <style scoped>

@@ -42,14 +42,17 @@
         </div>
         <span class="meeting-icon-span">屏幕共享</span>
       </div>
-
+      
+      
     </div>
   </div>
 </template>
 
 <script setup lang="ts" name="Meeting">
 import '@/styles/fonts.css'
-import { ref,reactive, onMounted } from 'vue';
+import { reactive, onMounted } from 'vue';
+
+
 
 // 对象类型
 let date = reactive({
@@ -70,7 +73,35 @@ onMounted(() => {
   })
 })
 
+import { useConfirmDialog } from '@/store/confirmDialog'
+import { useFormDialog } from '@/store/formDialog'
 
+const confirmDialog = useConfirmDialog()
+const formDialog = useFormDialog()
+
+// 普通确认模态框
+const showConfirmDialog = () => {
+  confirmDialog.open({
+    title: '删除确认',
+    content: '您确定要删除所有用户吗？此操作不可恢复。',
+    confirmText: '删除',
+    onConfirm: () => {
+      console.log('执行删除操作')
+      // 实际项目中调用API
+    }
+  })
+}
+
+// 提交表单模态框
+const showFormDialog = () => {
+  formDialog.open({
+    title: '添加新用户',
+    onSubmit: (formData) => {
+      console.log('提交表单数据:', formData)
+      // 实际项目中调用API
+    }
+  })
+}
 
 
 
