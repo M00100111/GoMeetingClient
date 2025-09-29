@@ -1,42 +1,47 @@
 import axios from 'axios'
-import { useAppStore, useUserInfoStore,useModalStore } from '@/store'
+import { useAppStore, useUserInfoStore, useModalStore } from '@/store'
 
 //使用接口合并为config添加自定义属性
 declare module 'axios' {
   export interface AxiosRequestConfig {
     needToken?: boolean
   }
-} 
+}
 
 // 自定义通用请求
-export const baseRequest = axios.create(
-  {
-    //设置请求相对路径
-    baseURL: import.meta.env.VITE_SERVER_URL+import.meta.env.VITE_API,
-    //设置超时时间
-    timeout: 12000,
-  },
-)
+export const baseRequest = axios.create({
+  //设置请求相对路径
+  baseURL: import.meta.env.VITE_SERVER_URL + import.meta.env.VITE_API,
+  //设置超时时间
+  timeout: 12000
+})
 //引入自定义拦截器
 baseRequest.interceptors.request.use(requestSuccess, requestFail)
 baseRequest.interceptors.response.use(responseSuccess, responseFail)
 
-// // 定义前台请求
-// export const request = axios.create(
-//   {
-//     baseURL: `${import.meta.env.VITE_API}/web`,
-//     timeout: 12000,
-//   },
-// )
-// //引入自定义拦截器
-// request.interceptors.request.use(requestSuccess, requestFail)
-// request.interceptors.response.use(responseSuccess, responseFail)
+// 定义工具请求
+export const toolRequest = axios.create({
+  baseURL: `${import.meta.env.VITE_SERVER_URL}/tool`,
+  timeout: 12000
+})
+//引入自定义拦截器
+toolRequest.interceptors.request.use(requestSuccess, requestFail)
+toolRequest.interceptors.response.use(responseSuccess, responseFail)
+
+// 定义用户请求
+export const userRequest = axios.create({
+  baseURL: `${import.meta.env.VITE_SERVER_URL}/user`,
+  timeout: 12000
+})
+//引入自定义拦截器
+userRequest.interceptors.request.use(requestSuccess, requestFail)
+userRequest.interceptors.response.use(responseSuccess, responseFail)
 
 /**
  * 发送请求前拦截
  * @param {import('axios').InternalAxiosRequestConfig} config
  */
-function requestSuccess(config:any) {
+function requestSuccess(config: any) {
   // 发送该请求需要token
   if (config.needToken) {
     // 获取token
@@ -57,7 +62,7 @@ function requestSuccess(config:any) {
  * 请求失败错误处理
  * @param {any} error
  */
-function requestFail(error:any) {
+function requestFail(error: any) {
   return Promise.reject(error)
 }
 
@@ -65,10 +70,11 @@ function requestFail(error:any) {
  * 响应成功拦截
  * @param {import('axios').AxiosResponse} response
  */
-function responseSuccess(response:any) {
+function responseSuccess(response: any) {
   const responseData = response.data
   const { code, message } = responseData
-  if (code !== 200) { // 与后端约定业务状态码
+  if (code !== 200) {
+    // 与后端约定业务状态码
     // 移出token的响应
     if (code === 1203) {
       // 移除 token

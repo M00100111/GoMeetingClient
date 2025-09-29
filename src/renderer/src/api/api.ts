@@ -1,11 +1,14 @@
-import { baseRequest } from '@/api/http'
+import { baseRequest, userRequest, toolRequest } from '@/api/http'
 import type { ArticleFormInterface } from '@/types/article.d.ts'
 
 export default {
-  //登录相关api
-  login: (data = {}) => baseRequest.post('/login', data),
-  signUp: (data = {}) => baseRequest.post('/signUp', data),
-  logout: () => baseRequest.get('/logout'),
+  // 工具相关api
+  getCaptcha: (data = {}) => toolRequest.post('/captcha', data),
+  //用户相关api
+  signUp: (data = {}) => userRequest.post('/signup', data),
+  login: (data = {}) => userRequest.post('/login', data),
+  logout: () => userRequest.get('/logout'),
+
   //分页获取文章列表
   getArticleList: (params = {}) => baseRequest.get('/article/list', { params }),
   //分页获取分享列表

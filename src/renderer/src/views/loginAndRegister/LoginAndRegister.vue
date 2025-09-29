@@ -5,8 +5,9 @@
         <div class="login-form">
           <span class="deyihei login-title">Login</span><br>
           <form @submit.prevent="handleLogin">
-            <input type="text" class="input" name="username" placeholder="Username" v-model="LoginForm.username" required><br>
+            <input type="text" class="input" name="email" placeholder="Email" v-model="LoginForm.email" required><br>
             <input type="password" class="input" name="password" placeholder="Password" v-model="LoginForm.password" required><br>
+            <input type="text" class="input" name="captcha" placeholder="Captcha" v-model="LoginForm.captcha"><br>
             <span class="forget-password" @click="openForget">Forget Your Password?</span><br>
             <button type="submit" class="button login-button">Login In</button>
           </form>
@@ -29,8 +30,15 @@
             <input type="text" class="input" name="email" placeholder="Email" v-model="SignUpform.email" required><br>
             <input type="text" class="input" name="username" placeholder="Username" v-model="SignUpform.username" required><br>
             <input type="password" class="input" name="password" placeholder="Password" v-model="SignUpform.password" required><br>
-            <input type="password" class="input" name="password-again" placeholder="Confirm Your Password" v-model="SignUpform.confirmPassword" required><br>            
-            <button type="submit" class="button sign-up-button">Sign Up</button>
+            <input type="password" class="input" name="password-again" placeholder="Confirm Your Password" v-model="SignUpform.confirmPassword" required><br> 
+            <input type="text" class="input" name="captcha" placeholder="Captcha" v-model="SignUpform.captcha" required><br>
+            <div class="sign-up-buttons">
+              <button type="button" 
+                      :class="captchaDisabled ? 'get-captcha-button-disable' : 'get-captcha-button-active'"
+                      @click="getCaptcha"
+              >{{captchaButtonText}}</button>
+              <button type="submit" class="sign-up-button">Sign Up</button>
+            </div>
           </form>
         </div> 
       </div>
@@ -51,8 +59,9 @@ const userInfoStore = useUserInfoStore()
 
 const status = ref(false)
 // 标识是否是出现动画
+// NoFirst
 const noF = ref(false)
-
+// 改变block动画
 function changeStatus() {
   status.value == true ? status.value = false : status.value = true
   noF.value = true
@@ -60,31 +69,39 @@ function changeStatus() {
 
 //登录表单数据
 const LoginForm = ref({
-  username: '',
+  email: '',
   password: '',
+  captcha: ''
 })
 
 //登录验证
 async function handleLogin() {
   //获取用户填写的数据
-  const { username, password } = LoginForm.value
+  const { email, password,captcha } = LoginForm.value
   // 二次验证用户是否未填写数据
-  if (!username || !password) {
-    modal.Notice("请输入账号和密码")
+  if (!email) {
+    modal.Notice("请输入邮箱")
+    console.log("请输入邮箱");
+    return
+  }
+  if (!password && !captcha) {
+    modal.Notice("请输入密码或验证码")
+    console.log("请输入密码或验证码");
     return
   }
   //定义登录函数
   const doLogin = async () => {
     //调用登录接口
-    const response = await api.login({username,password})
+    const response = await api.login(LoginForm.value)
     //将用户基本信息保存到pinia
     userInfoStore.setUserInfo(response.data)
     //将token保存到pinia
     userInfoStore.setToken(response.data.token)
+    console.log(userInfoStore.token);
     //清空表单数据
-    LoginForm.value = { username: '', password: '' }
+    LoginForm.value = { email: '', password: '',captcha: '' }
     modal.Notice("Welcome back!")    
-    router.replace({path:'/home'})
+    router.replace({path:'/meeting'})
   }
   // 调用登录函数 
   doLogin()
@@ -97,25 +114,41 @@ const SignUpform = ref({
   username: '',
   password: '',
   confirmPassword: '',
+  captcha: '',
+  sex: 0,
+  avatar:''
 })
 
 function handleSignUp() {
   //获取用户填写的数据
-  const { username, password, confirmPassword } = SignUpform.value
+  const { email, username, password, confirmPassword } = SignUpform.value
   //二次验证
+  if (!validateEmail(SignUpform.value.email)) {
+    modal.Notice("邮箱格式错误")
+    console.log("邮箱格式错误");
+    return
+  }
   if (!username || !password || !confirmPassword) {
     modal.Notice("请输入账号和密码")
+    console.log("请输入账号和密码");
     return
   }
   if (password != confirmPassword) {
     modal.Notice("俩次输入的密码不一致")
+    console.log("俩次输入的密码不一致");
+  }
+  if (!SignUpform.value.captcha) {
+    modal.Notice("请输入验证码")
+    console.log("请输入验证码");
+    return
   }
   //定义注册函数
   const doRegister = async () => {
     await api.signUp(SignUpform.value)
     modal.Notice("注册成功")
-    SignUpform.value = { email:'',username: '', password: '', confirmPassword: ''};
-    LoginForm.value = {username: username, password: password}
+    console.log("注册成功");
+    SignUpform.value = { email:'',username: '', password: '', confirmPassword: '', captcha: '', sex: 0, avatar:''};
+    LoginForm.value = {email: email, password: password, captcha: ''}
     changeStatus()
   }
   //立即调用注册函数
@@ -126,6 +159,71 @@ function handleSignUp() {
 function openForget() {
   modal.Notice("暂不支持找回密码")
 }
+
+// 添加验证码按钮状态相关变量
+const captchaDisabled = ref(false)
+const captchaButtonText = ref('Get Captcha')
+const captchaCountdown = ref(30)
+// 验证邮箱格式的函数
+function validateEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+// 倒计时定时器引用
+let countdownTimer: number | null = null
+// 开始倒计时函数
+function startCountdown() {
+  captchaCountdown.value = 30
+  captchaButtonText.value = `${captchaCountdown.value}s`
+  
+  countdownTimer = window.setInterval(() => {
+    captchaCountdown.value--
+    if (captchaCountdown.value > 0) {
+      captchaButtonText.value = `${captchaCountdown.value}s`
+    } else {
+      // 倒计时结束
+      if (countdownTimer) {
+        clearInterval(countdownTimer)
+      }
+      captchaDisabled.value = false
+      captchaButtonText.value = 'Get Captcha'
+    }
+  }, 1000)
+}
+// 获取验证码的函数
+async function getCaptcha() {
+  // 1. 验证邮箱是否填写
+  if (!SignUpform.value.email) {
+    modal.Notice("请输入邮箱地址")
+    console.log("请输入邮箱地址");
+    return
+  }
+  // 2. 验证邮箱格式是否正确
+  if (!validateEmail(SignUpform.value.email)) {
+    modal.Notice("请输入正确的邮箱格式")
+    console.log("请输入正确的邮箱格式");
+    return
+  }
+  // 3. 设置按钮为禁用状态并开始倒计时
+  try {
+    // 3. 调用API发送验证码
+    await api.getCaptcha({ email: SignUpform.value.email, expire:0 })
+    // 4. 发送成功后设置按钮为禁用状态并开始倒计时
+    modal.Notice("验证码已发送至您的邮箱")
+    console.log("验证码已发送至您的邮箱");
+    captchaDisabled.value = true
+    startCountdown()
+  } catch (error) {
+    // 5. 处理发送失败的情况
+    console.error("发送验证码失败:", error)
+    modal.Notice("验证码发送失败，请稍后重试")
+    console.log("验证码发送失败，请稍后重试");
+    // 重置按钮状态，允许用户重新尝试
+    captchaDisabled.value = false
+    captchaButtonText.value = 'Get Captcha'
+  }
+}
+
 </script>
 
 <style scoped>
@@ -153,7 +251,7 @@ function openForget() {
     background: transparent;
   } */
   /* 确保按钮等交互元素不被拖拽影响 */
-  .button, .input, .forget-password {
+  .button, .input, .forget-password, .sign-up-button,.get-captcha-button-active {
     -webkit-app-region: no-drag;
   }
 
@@ -360,6 +458,8 @@ function openForget() {
   .sign-up {
     width: 800px;
     height: 500px;
+    /* display: flex;
+    align-items: center; */
   }
   .sign-up::after {
     content:'';
@@ -367,10 +467,15 @@ function openForget() {
     clear: both;
   }  
   .sign-up-form{
+    /* background-color: red; */
     float: left;
+    height: 100%;
     width: 50%;
     text-align: center;
-    margin-top: 10%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    /* margin-top: 10%; */
   }
   .to-login{
     float: right;
@@ -381,13 +486,50 @@ function openForget() {
   .sign-up-title {
     color: rgb(0, 86,145);
     display: inline-block;
-    margin-bottom: 10px;
+    /* margin-bottom: 10px; */
     cursor: default;
+  }
+  .sign-up-buttons{
+    /* background-color: red; */
+    padding-top: 20px;
+    width: 250px;
+    margin: 0 auto; /* 容器本身居中 */
+    display: flex;
+    justify-content:space-between;
   }
   .sign-up-button {
     background-color: rgb(0, 86,145);
     color: #fff;
     border:none;
+    width: 45%;
+    height: 40px;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .get-captcha-button-active{
+    background-color: rgb(0, 86,145);
+    color: #fff;
+    border:none;
+    width: 45%;
+    height: 40px;
+    border-radius: 5px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .get-captcha-button-disable{
+    background-color: transparent;
+    width: 45%;
+    height: 40px;
+    border-radius: 5px;
+    border-width: 2px;     /* 边框宽度 */
+    border-style: solid; 
+    border-color: rgb(0, 86,145);
+    font-size: 15px;
+    font-weight: bold;
+    color:rgb(0, 86,145);
   }
   .to-sign-up-title {
     color: white;

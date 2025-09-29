@@ -19,7 +19,7 @@ if (process.contextIsolated) {
       },
       minimizeWindow: () => ipcRenderer.send('window-control', 'minimize'),
       closeWindow: () => ipcRenderer.send('window-control', 'close'),
-      createMeetingWindow: () => ipcRenderer.invoke('create-meeting-window')
+      createNewWindow: (route: string) => ipcRenderer.invoke('create-new-window', route)
     })
   } catch (error) {
     console.error(error)

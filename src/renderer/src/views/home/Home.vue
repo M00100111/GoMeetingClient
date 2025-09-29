@@ -10,15 +10,77 @@
         <TitleBar></TitleBar>
         <RouterView></RouterView>
       </div>
+
     </div>
   </div>
 </template>
 
 <script setup lang="ts" name="Home">
 //引入路由展示区标签
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import Navigate from '@/components/Navigate.vue';
 import TitleBar from '@/components/TitleBar.vue';
+import { websocketService } from '@/utils/websocket'
+console.log("挂载home组件");
+// 检查并建立连接
+const checkAndConnect = async () => {
+  console.log("检测是否已建立ws连接");
+  // 检查当前连接状态
+  const currentStatus = websocketService.getConnectionStatus()
+  if (!currentStatus) {
+    console.log('WebSocket未连接,正在建立连接...')
+    const success = await websocketService.connect('ws://localhost:8081/ws')
+    if (success) {
+      // 注册全局消息处理器
+      registerGlobalHandlers()
+      console.log('成功建立WebSocket连接');
+    }
+  } else {
+    console.log('WebSocket已建立连接')
+  }
+}
+onMounted(() => {
+  // 组件挂载时检查并建立连接
+  checkAndConnect()
+})
+// 父容器注册ws处理函数
+const registerGlobalHandlers = () => {
+  // 聊天消息处理器
+  // websocketService.registerHandlers(MessageMethod.Chat_Method, (data: any) => {
+  //   console.log('全局收到聊天消息:', data)
+  //   // 这里可以触发全局事件总线或更新全局状态
+  //   // 比如显示全局通知、更新未读消息数等
+    
+  //   // 根据你的MessageHandler类型，需要返回boolean
+  //   return true // 处理成功
+  // })
+
+  // // 通知消息处理器
+  // websocketService.registerHandlers(MessageMethod.Notification_Method, (data: any) => {
+  //   console.log('全局收到通知:', data)
+  //   // 处理全局通知，比如显示Toast通知
+    
+  //   return true
+  // })
+
+  // // 会议开始通知处理器
+  // websocketService.registerHandlers(MessageMethod.Meeting_Start_Notice_Method, (data: any) => {
+  //   console.log('会议开始:', data)
+  //   // 可以跳转到会议页面或显示会议提醒
+    
+  //   return true
+  // })
+
+  // // 会议消息处理器
+  // websocketService.registerHandlers(MessageMethod.Meeting_Message_Method, (data: any) => {
+  //   console.log('会议消息:', data)
+  //   // 处理会议中的实时消息
+    
+  //   return true
+  // })
+}
+
 </script>
 
 <style scoped>

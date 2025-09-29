@@ -24,7 +24,7 @@ watch(route, (to, from) => {
 // 发送组件尺寸信息给 Electron 主进程
 function sendComponentSizeToElectron() {
   try {
-    // 查找当前页面中的 page-container 元素
+    // 查找当前页面中的 page-container 元素，不同渲染进程会共享同个App.vue
     const container = document.querySelector('.page-container')
     if (container) {
       const rect = container.getBoundingClientRect()
@@ -63,8 +63,15 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 确保子组件居中 */
 .app {
-  min-width: fit-content;
-  min-height: fit-content;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>

@@ -1,4 +1,5 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, session, shell, BrowserWindow, ipcMain, globalShortcut } from 'electron'
+// import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -11,18 +12,18 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     frame: false, // 隐藏边框
-
     // resizable: true, // 允许调整窗口大小
     resizable: false, // 不允许调整窗口大小
     // backgroundColor: '#ffffff',
-    // backgroundColor: '#000000', // 设置背景为透明
+    // backgroundColor: '#000000', // 设置背景颜色
     transparent: true, // 启用透明窗口
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
       // nodeIntegration: true, // 启用 Node.js 集成
-      // contextIsolation: false // 禁用上下文隔离
+      // contextIsolation: false, // 禁用上下文隔离
+      webSecurity: false //CSP
     }
   })
 
@@ -50,18 +51,24 @@ function createWindow(): void {
 }
 
 // 新打开渲染进程页面
-function createMeetingWindow(): void {
+function createNewWindow(route: string): void {
   const meetingWindow = new BrowserWindow({
     width: 800,
     height: 600,
     show: false,
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
+    // frame: true,
     frame: false,
+    // backgroundColor: '#353533',
+    // transparent: false,
     transparent: true,
+    resizable: false, // 添加这行来禁止调整大小
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      // 开发环境中可以禁用webSecurity来解决CSP问题
+      webSecurity: false
     }
   })
 
@@ -70,19 +77,44 @@ function createMeetingWindow(): void {
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    meetingWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/#/login`)
+    meetingWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/#${route}`)
   } else {
     meetingWindow.loadFile(join(__dirname, '../renderer/index.html'), {
-      hash: '#/login'
+      hash: '#' + route
     })
   }
 }
+
+// async function loadVueDevTools() {
+//   try {
+//     const name = await installExtension(VUEJS_DEVTOOLS)
+//     console.log(`Added Extension: ${name}`)
+//   } catch (err) {
+//     console.log('Failed to install Vue DevTools:', err)
+//   }
+// }
 
 // 应用准备就绪时
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  if (is.dev) {
+    // 手动加载 Vue DevTools
+    session.defaultSession.extensions
+      .loadExtension(
+        'C:\\Users\\RaY\\AppData\\Local\\Microsoft\\Edge\\User Data\\Default\\Extensions\\olofadcdnkkjdfgjcmjaadnlehnnihnl\\6.6.3_0'
+      )
+      .then(() => {
+        console.log('Vue DevTools loaded')
+      })
+      .catch((err) => {
+        console.log('Failed to load Vue DevTools:', err)
+      })
+  }
+  // if (is.dev) {
+  //   loadVueDevTools()
+  // }
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -121,9 +153,17 @@ app.whenReady().then(() => {
     }
   })
 
-  // IPC 处理：创建会议窗口
-  ipcMain.handle('create-meeting-window', async () => {
-    return createMeetingWindow()
+  // IPC 处理：创建窗口
+  ipcMain.handle('create-new-window', async (_event, route: string) => {
+    return createNewWindow(route)
+  })
+
+  // 注册F12快捷键打开开发者工具
+  globalShortcut.register('F12', () => {
+    const focusedWindow = BrowserWindow.getFocusedWindow()
+    if (focusedWindow) {
+      focusedWindow.webContents.toggleDevTools()
+    }
   })
 
   // 开启主渲染线程

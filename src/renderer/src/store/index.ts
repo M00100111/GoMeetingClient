@@ -11,4 +11,3 @@ export { pinia }
 export * from './app'
 export * from './userInfo'
 export * from './modal'
-export * from './draft'

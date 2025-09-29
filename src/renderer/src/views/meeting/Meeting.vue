@@ -19,12 +19,12 @@
     </div>
     <div class="menu">
       <div class="meeting-button">
-        <div class="meeting-button-bottom" @click="createMeetingWindow">
+        <div class="meeting-button-bottom" @click="showFormDialog">
           <img class="meeting-icon quick-icon" src="@/assets/icon/quick.svg">
         </div>
         <span class="meeting-icon-span">快速会议</span>
       </div>
-      <div class="meeting-button">
+      <div class="meeting-button" @click="showConfirmDialog">
         <div class="meeting-button-bottom">
           <img class="meeting-icon join-icon" src="@/assets/icon/join.svg">
         </div>
@@ -49,7 +49,8 @@
 
 <script setup lang="ts" name="Meeting">
 import '@/styles/fonts.css'
-import { reactive,onMounted } from 'vue';
+import { ref,reactive, onMounted } from 'vue';
+
 // 对象类型
 let date = reactive({
   day: 'XXXX年X月X日',
@@ -69,10 +70,19 @@ onMounted(() => {
   })
 })
 
-// 创建新的会议窗口
-const createMeetingWindow = () => {
-  (window as any).MyAPI.createMeetingWindow()
-}
+
+
+
+
+
+// // 创建新的会议窗口
+// const createMeetingWindow = () => {
+//   (window as any).MyAPI.createNewWindow('/room')
+// }
+// // 创建新的会议窗口
+// const createLoginWindow = () => {
+//   (window as any).MyAPI.createNewWindow('/login')
+// }
 
 </script>
 
@@ -177,6 +187,9 @@ const createMeetingWindow = () => {
     justify-content: center;
     -webkit-app-region: no-drag;
     cursor:pointer
+  }
+  .meeting-button-bottom:hover{
+    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
   }
   .meeting-icon{
     width: 50px;

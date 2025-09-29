@@ -1,45 +1,50 @@
 import { defineStore } from 'pinia'
 import api from '@/api/api'
 import { convertImgUrl } from '@/utils/index'
+import Cookies from 'js-cookie'
 
 export const useUserInfoStore = defineStore('userInfo', {
   //存储数据
   state() {
     return {
       //用户登录状态
-      login_flag:false,
+      login_flag: false,
       // 用户基本数据
       userInfo: {
         userId: '',
         username: '访客',
         email: '',
         avatar: '',
-        introduction:'这个人很酷,什么都没有留下。',
+        introduction: '这个人很酷,什么都没有留下。',
         articleLikeSet: [],
-        commentLikeSet: [],
+        commentLikeSet: []
       },
       token: null,
+      expireTime: 0
     }
   },
   // 当state中的数据需要经过处理在使用时可使用getters存放处理函数
-  getters: {//func中默认会收到state参数
-    loginFlag:(state) => state.login_flag,  
+  getters: {
+    //func中默认会收到state参数
+    loginFlag: (state) => state.login_flag,
     userId: (state) => state.userInfo.userId ?? '',
     username: (state) => state.userInfo.username ?? '',
-    avatar: (state) => 'https://i0.hdslb.com/bfs/article/da03a68e8014974df4900e7397023b1380b1f09e.jpg',
+    avatar: (state) =>
+      'https://i0.hdslb.com/bfs/article/da03a68e8014974df4900e7397023b1380b1f09e.jpg',
     email: (state) => state.userInfo.email ?? '',
     articleLikeSet: (state) => state.userInfo.articleLikeSet || [],
-    commentLikeSet: (state) => state.userInfo.commentLikeSet || [],
+    commentLikeSet: (state) => state.userInfo.commentLikeSet || []
   },
   //存放修改数据的动作函数
-  actions: {//this.变量或$state.变量
+  actions: {
+    //this.变量或$state.变量
     //更改登录状态
-    setLoginStatus(flag:boolean) {
+    setLoginStatus(flag: boolean) {
       this.login_flag = flag
     },
     //更新用户基本数据
-    setUserInfo(data:any) {
-      this.userInfo.userId = data.ID
+    setUserInfo(data: any) {
+      this.userInfo.userId = String(data.user_id)
       this.userInfo.username = data.username
       this.userInfo.email = data.email
       this.userInfo.avatar = convertImgUrl(data.avatar)
@@ -48,6 +53,15 @@ export const useUserInfoStore = defineStore('userInfo', {
     //存入token
     setToken(token: any) {
       this.token = token
+      // 设置过期时间为一天后（24小时 = 86400000毫秒）
+      this.expireTime = Date.now() + 86400000
+      // 同时保存到 cookie，设置 1 天过期时间
+      Cookies.set('token', token, {
+        expires: 1, // 1天过期
+        path: '/',
+        secure: import.meta.env.PROD, // 生产环境启用 secure
+        sameSite: 'strict'
+      })
     },
     //重置登录状态
     resetLoginState() {
@@ -75,29 +89,28 @@ export const useUserInfoStore = defineStore('userInfo', {
             userId: data.id,
             username: data.username,
             email: data.email,
-            avatar: data.avatar ? convertImgUrl(data.avatar) : 'https://i0.hdslb.com/bfs/article/da03a68e8014974df4900e7397023b1380b1f09e.jpg',
-            introduction:data.introduction,
+            avatar: data.avatar
+              ? convertImgUrl(data.avatar)
+              : 'https://i0.hdslb.com/bfs/article/da03a68e8014974df4900e7397023b1380b1f09e.jpg',
+            introduction: data.introduction,
             // 将数组中的每个元素转换为数字类型
-            articleLikeSet: data.article_like_set.map((e:string) => +e),
-            commentLikeSet: data.comment_like_set.map((e:string) => +e),
+            articleLikeSet: data.article_like_set.map((e: string) => +e),
+            commentLikeSet: data.comment_like_set.map((e: string) => +e)
           }
           return Promise.resolve(response.data)
-        }
-        else {
+        } else {
           return Promise.reject(response)
         }
-      }
-      catch (error) {
+      } catch (error) {
         return Promise.reject(error)
       }
     }
-
   },
   // 持久化token到localStorage
   persist: {
     // 存放在storage中的持久化数据的键
     key: 'userInfo',
     // state中需要持久化的数据
-    pick: ['token','login_flag','userInfo']
-  },
+    pick: ['token', 'login_flag', 'userInfo', 'expireTime']
+  }
 })
