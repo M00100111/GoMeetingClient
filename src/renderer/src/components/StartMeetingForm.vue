@@ -67,6 +67,9 @@ const formData = ref({
   meetingName: '',
   joinType: 0,
   password: '',
+  micStatus: 0,
+  cameraStatus: 0,
+  screenStatus: 0
 })
 // 暴露获取表单数据的方法
 defineExpose({
@@ -74,7 +77,10 @@ defineExpose({
     meetingId: formData.value.meetingId,
     meetingName: formData.value.meetingName,
     joinType: formData.value.joinType,
-    password: formData.value.password
+    password: formData.value.password,
+    micStatus: formData.value.micStatus,
+    cameraStatus: formData.value.cameraStatus,
+    screenStatus: formData.value.screenStatus
   })
 })
 const meetingIDList = ref<number[]>([])
@@ -83,6 +89,11 @@ onMounted(() => {
   formData.value.meetingId = userId
   formData.value.meetingName = userInfoStore.username+'的会议'
   formData.value.joinType = 0 // 设置加入方式的初始值为"开放加入"
+
+  formData.value.micStatus = userInfoStore.userInfo.micStatus
+  formData.value.cameraStatus = userInfoStore.userInfo.cameraStatus
+  formData.value.screenStatus = userInfoStore.userInfo.screenStatus
+
   // 将userId添加到meetingIDList中
   meetingIDList.value.push(userId)
   // 设置默认选中第一个元素

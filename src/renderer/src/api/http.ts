@@ -53,6 +53,7 @@ meetingRequest.interceptors.response.use(responseSuccess, responseFail)
 function requestSuccess(config: any) {
   // 发送该请求需要token
   if (config.needToken) {
+    console.log('当前请求需要token')
     // 获取token
     const { token } = useUserInfoStore()
     // 获取不到token

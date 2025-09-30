@@ -17,7 +17,10 @@ export const useUserInfoStore = defineStore('userInfo', {
         avatar: '',
         introduction: '这个人很酷,什么都没有留下。',
         articleLikeSet: [],
-        commentLikeSet: []
+        commentLikeSet: [],
+        micStatus: 0,
+        cameraStatus: 0,
+        screenStatus: 0
       },
       token: null,
       expireTime: 0
@@ -85,18 +88,21 @@ export const useUserInfoStore = defineStore('userInfo', {
         //更新用户基本数据
         if (response.data.code === 200) {
           const data = response.data
-          this.userInfo = {
-            userId: data.id,
-            username: data.username,
-            email: data.email,
-            avatar: data.avatar
-              ? convertImgUrl(data.avatar)
-              : 'https://i0.hdslb.com/bfs/article/da03a68e8014974df4900e7397023b1380b1f09e.jpg',
-            introduction: data.introduction,
-            // 将数组中的每个元素转换为数字类型
-            articleLikeSet: data.article_like_set.map((e: string) => +e),
-            commentLikeSet: data.comment_like_set.map((e: string) => +e)
-          }
+          // this.userInfo = {
+          //   userId: data.id,
+          //   username: data.username,
+          //   email: data.email,
+          //   avatar: data.avatar
+          //     ? convertImgUrl(data.avatar)
+          //     : 'https://i0.hdslb.com/bfs/article/da03a68e8014974df4900e7397023b1380b1f09e.jpg',
+          //   introduction: data.introduction,
+          //   // 将数组中的每个元素转换为数字类型
+          //   articleLikeSet: data.article_like_set.map((e: string) => +e),
+          //   commentLikeSet: data.comment_like_set.map((e: string) => +e)
+          // }
+          this.userInfo.userId = String(data.id)
+          this.userInfo.username = data.username
+          this.userInfo.email = data.email
           return Promise.resolve(response.data)
         } else {
           return Promise.reject(response)
