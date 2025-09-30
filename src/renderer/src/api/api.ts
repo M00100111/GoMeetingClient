@@ -1,4 +1,4 @@
-import { baseRequest, userRequest, toolRequest } from '@/api/http'
+import { baseRequest, userRequest, toolRequest, meetingRequest } from '@/api/http'
 import type { ArticleFormInterface } from '@/types/article.d.ts'
 
 export default {
@@ -8,6 +8,9 @@ export default {
   signUp: (data = {}) => userRequest.post('/signup', data),
   login: (data = {}) => userRequest.post('/login', data),
   logout: () => userRequest.get('/logout'),
+
+  // 会议相关api
+  startMeeting: (data = {}) => meetingRequest.post('/startmeeting', data, { needToken: true }),
 
   //分页获取文章列表
   getArticleList: (params = {}) => baseRequest.get('/article/list', { params }),

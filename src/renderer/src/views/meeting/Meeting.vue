@@ -19,7 +19,7 @@
     </div>
     <div class="menu">
       <div class="meeting-button">
-        <div class="meeting-button-bottom" @click="showFormDialog">
+        <div class="meeting-button-bottom" @click="openStartMeetingForm">
           <img class="meeting-icon quick-icon" src="@/assets/icon/quick.svg">
         </div>
         <span class="meeting-icon-span">快速会议</span>
@@ -51,7 +51,8 @@
 <script setup lang="ts" name="Meeting">
 import '@/styles/fonts.css'
 import { reactive, onMounted } from 'vue';
-
+import UserForm from '@/components/UserForm.vue'
+import StartMeetingForm from '@/components/StartMeetingForm.vue'
 
 
 // 对象类型
@@ -92,24 +93,60 @@ const showConfirmDialog = () => {
   })
 }
 
-// 提交表单模态框
-const showFormDialog = () => {
+// 打开用户表单
+const openUserForm = () => {
   formDialog.open({
-    title: '添加新用户',
-    onSubmit: (formData) => {
-      console.log('提交表单数据:', formData)
-      // 实际项目中调用API
+    title: '用户信息',
+    component: UserForm,
+    onSubmit: (data) => {
+      console.log('用户表单提交数据:', data)
+      // 处理提交逻辑
     }
   })
 }
 
+// 打开会议表单
+const openStartMeetingForm = () => {
+  formDialog.open({
+    title: '开启会议',
+    component: StartMeetingForm,
+    componentProps: {
+      // 可以传递特定属性给组件
+      meetingType: 'video'
+    },
+    onSubmit: (data) => {
+      console.log('会议表单提交数据:', data)
+      // 处理提交逻辑
+      doStartMeeting(data)
+      
+    }
+  })
+}
+
+import api from "@/api/api"
+  //定义开启会议函数
+  const doStartMeeting = async (data) => {
+    //调用登录接口
+    try {
+      const response = await api.startMeeting(data) as any;
+      // 如果请求成功且业务状态码为200
+      if (response.code) {
+        
+      }
+      console.log("成功开启会议!!!");
+      createMeetingWindow()
+    } catch (error) {
+      // 请求失败或业务状态码非200
+      console.log("开启会议失败");
+      console.log(error);
+    }
+  }
 
 
-
-// // 创建新的会议窗口
-// const createMeetingWindow = () => {
-//   (window as any).MyAPI.createNewWindow('/room')
-// }
+// 创建新的会议窗口
+const createMeetingWindow = () => {
+  (window as any).MyAPI.createNewWindow('/room')
+}
 // // 创建新的会议窗口
 // const createLoginWindow = () => {
 //   (window as any).MyAPI.createNewWindow('/login')

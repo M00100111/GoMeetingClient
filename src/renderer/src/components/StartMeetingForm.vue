@@ -1,70 +1,125 @@
-<!-- src/components/StartMeetingForm.vue -->
 <template>
-  <div class="user-form">
+  <div class="startmeetingform">
     <div class="form-group">
-      <label>姓名：</label>
+      <label class="form-label">会议ID：</label>
+        <select 
+          v-model="formData.meetingId" 
+          class="form-input"
+          required
+        >
+          <option 
+            v-for="id in meetingIDList" 
+            :key="id" 
+            :value="id"
+          >
+            {{ id }}
+          </option>
+        </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">会议名称：</label>
       <input 
-        v-model="formData.name" 
+        v-model="formData.meetingName" 
         class="form-input" 
         required 
-        placeholder="请输入姓名"
+        placeholder="请输入会议名称"
       />
     </div>
     <div class="form-group">
-      <label>邮箱：</label>
+      <label class="form-label">加入方式：</label>
+      <div class="radio-group">
+        <div class="radio-item">
+          <button 
+            class="radio-button radio-button-left" 
+            :class="{ 'radio-button-active': formData.joinType == 0 }"
+            @click="formData.joinType = 0">
+            开放加入
+          </button>
+        </div>
+        <div class="radio-item">
+          <button 
+            class="radio-button radio-button-right"
+            :class="{ 'radio-button-active': formData.joinType == 1 }"
+            @click="formData.joinType = 1">
+            需要密码
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="form-group" v-if="formData.joinType == 1">
+      <label class="form-label">入会密码：</label>
       <input 
-        v-model="formData.email" 
-        type="email" 
+        v-model="formData.password" 
         class="form-input" 
         required 
-        placeholder="请输入邮箱"
-      />
-    </div>
-    <div class="form-group">
-      <label>年龄：</label>
-      <input 
-        v-model.number="formData.age" 
-        type="number" 
-        class="form-input" 
-        placeholder="请输入年龄"
+        placeholder="请输入5位会议密码"
       />
     </div>
   </div>
 </template>
 
-<script lang="ts" setup>
-import { ref, defineExpose } from 'vue'
-
+<script setup lang="ts" name="StartMeetingForm">
+import { ref, defineExpose, onMounted, computed } from 'vue'
+import { useUserInfoStore } from "@/store"
+const userInfoStore = useUserInfoStore()
 const formData = ref({
-  name: '',
-  email: '',
-  age: 0
+  meetingId: 0,
+  meetingName: '',
+  joinType: 0,
+  password: '',
 })
-
 // 暴露获取表单数据的方法
 defineExpose({
   getFormData: () => ({
-    name: formData.value.name,
-    email: formData.value.email,
-    age: formData.value.age
+    meetingId: formData.value.meetingId,
+    meetingName: formData.value.meetingName,
+    joinType: formData.value.joinType,
+    password: formData.value.password
   })
 })
+const meetingIDList = ref<number[]>([])
+onMounted(() => {
+  const userId = Number(userInfoStore.userId)
+  formData.value.meetingId = userId
+  formData.value.meetingName = userInfoStore.username+'的会议'
+  formData.value.joinType = 0 // 设置加入方式的初始值为"开放加入"
+  // 将userId添加到meetingIDList中
+  meetingIDList.value.push(userId)
+  // 设置默认选中第一个元素
+  // if (meetingIDList.value.length > 0) {
+  //   formData.value.meetingId = meetingIDList.value[0]
+  // }
+})
+
+// 计算属性：校验表单是否有效
+// const isFormValid = computed(() => {
+//   // 校验会议ID是否为12位数字
+//   const meetingIdStr = formData.value.meetingId.toString();
+//   if (meetingIdStr.length !== 12 || !/^\d+$/.test(meetingIdStr)) {
+//     return false;
+//   }
+  
+//   // 如果需要密码，校验密码是否为5位
+//   if (formData.value.joinType === 1) {
+//     return formData.value.password && /^\d{5}$/.test(formData.value.password);
+//   }
+  
+//   return true;
+// })
 </script>
 
 <style scoped>
-.user-form {
-  /* padding: 16px; */
+.startmeetingform{
   /* background-color: red; */
-  width: 400px; /* 确保表单填满对话框内容区域 */
-  /* background-color: green; */
-  /* height: 150px;
+  height: 200px;
   display: flex;
-  flex-direction:column;
+  flex-direction: column;
+  align-items: center;
   justify-content:center;
-  align-items:center; */
 }
-
 .form-group {
+  /* background-color: blue; */
+  width: 100%;
   margin-bottom: 10px;
   display: flex;
   justify-content:center;
@@ -74,7 +129,10 @@ defineExpose({
 .form-group:last-child {
   margin-bottom: 0;
 }
-.form-group label {
+.form-label {
+  width: 90px;
+  text-align: right;
+  /* background-color: red; */
   font-weight: 500;
   color: #333;
 }
@@ -95,12 +153,39 @@ defineExpose({
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
-
-.form-input:required:invalid {
-  border-color: #ff4757;
+.radio-group{
+  /* background-color: green; */
+  width: 80%; /* 改为100%填充可用空间 */
+  /* padding: 10px 0px; */
+  height: 40px;
+  box-sizing: border-box; /* 添加这行 */
+  display: flex;
+  justify-content:space-between;
 }
-
-.form-input:required:valid {
-  border-color: #2ed573;
+.radio-item{
+  display: flex;
+  /* background-color: blue; */
+  height: 100%;
+  width: 50%;
+}
+.radio-button{
+  height: 100%;
+  width: 100%;
+  border: 1px solid #ddd;
+  -webkit-app-region: no-drag;
+  cursor: pointer;
+}
+.radio-button-active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+.radio-button-left{
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+.radio-button-right{
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 </style>

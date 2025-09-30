@@ -37,6 +37,15 @@ export const userRequest = axios.create({
 userRequest.interceptors.request.use(requestSuccess, requestFail)
 userRequest.interceptors.response.use(responseSuccess, responseFail)
 
+// 定义会议请求
+export const meetingRequest = axios.create({
+  baseURL: `${import.meta.env.VITE_SERVER_URL}/meeting`,
+  timeout: 12000
+})
+//引入自定义拦截器
+meetingRequest.interceptors.request.use(requestSuccess, requestFail)
+meetingRequest.interceptors.response.use(responseSuccess, responseFail)
+
 /**
  * 发送请求前拦截
  * @param {import('axios').InternalAxiosRequestConfig} config
@@ -51,6 +60,7 @@ function requestSuccess(config: any) {
       //拒绝发送请求
       return Promise.reject(new axios.AxiosError('当前没有登录，请先登录！', '401'))
     }
+    console.log('token', token)
     //需要使用token时使所有请求携带token
     config.headers.Authorization = config.headers.Authorization || `Bearer ${token}`
   }

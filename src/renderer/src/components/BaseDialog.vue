@@ -248,7 +248,7 @@ onMounted(() => {
 }
 
 .base-dialog-content {
-  padding: 15px;
+  padding: 25px;
   word-break: break-word;
   box-sizing: border-box;
   flex: 1;

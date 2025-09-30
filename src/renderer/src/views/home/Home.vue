@@ -24,13 +24,26 @@
       </BaseDialog>
 
       <!-- 提交表单模态框 (在父组件中挂载) -->
-      <BaseDialog
+      <!-- <BaseDialog
         v-model:visible="formDialog.visible"
         :title="formDialog.title"
         @confirm="handleFormConfirm"
         @cancel="formDialog.close"
       >
         <UserForm ref="userFormRef" />
+      </BaseDialog> -->
+      <!-- 提交表单模态框 (在父组件中挂载) -->
+      <BaseDialog
+        v-model:visible="formDialog.visible"
+        :title="formDialog.title"
+        @confirm="handleFormConfirm"
+        @cancel="formDialog.close"
+      >
+        <component 
+          :is="formDialog.component" 
+          ref="dynamicFormRef" 
+          v-bind="formDialog.componentProps"
+        />
       </BaseDialog>
 
     </div>
@@ -39,17 +52,20 @@
 
 <script setup lang="ts" name="Home">
 //引入路由展示区标签
-import { ref, onMounted } from 'vue'
+import { shallowRef, onMounted,ComponentPublicInstance  } from 'vue'
 import { RouterView } from 'vue-router'
 import Navigate from '@/components/Navigate.vue';
 import TitleBar from '@/components/TitleBar.vue';
 import { useConfirmDialog } from '@/store/confirmDialog'
 import { useFormDialog } from '@/store/formDialog'
 import BaseDialog from '@/components/BaseDialog.vue'
-import UserForm from '@/components/StartMeetingForm.vue'
 const confirmDialog = useConfirmDialog()
 const formDialog = useFormDialog()
-const userFormRef = ref<InstanceType<typeof UserForm> | null>(null)
+
+// import UserForm from '@/components/UserForm.vue'
+// import StartMeetingForm from '@/components/StartMeetingForm.vue'
+
+// const userFormRef = ref<InstanceType<typeof UserForm> | null>(null)
 import { websocketService } from '@/utils/websocket'
 console.log("挂载home组件");
 // 检查并建立连接
@@ -110,12 +126,32 @@ const registerGlobalHandlers = () => {
   // })
 }
 // 处理表单确认
+// const handleFormConfirm = () => {
+//   if (userFormRef.value) {
+//     const formData = userFormRef.value.getFormData()
+//     formDialog.handleSubmit(formData)
+//   }
+// }
+// 动态表单引用
+// const dynamicFormRef = ref<ComponentPublicInstance | null>(null)
+const dynamicFormRef = shallowRef<ComponentPublicInstance | null>(null)
+// 修改 handleFormConfirm 方法以适配动态表单
+// const handleFormConfirm = () => {
+//   if (dynamicFormRef.value) {
+//     // 注意：这里假定所有表单组件都有 getFormData 方法
+//     const formData = dynamicFormRef.value.getFormData?.()
+//     formDialog.handleSubmit(formData)
+//   }
+// }
 const handleFormConfirm = () => {
-  if (userFormRef.value) {
-    const formData = userFormRef.value.getFormData()
-    formDialog.handleSubmit(formData)
+  if (dynamicFormRef.value && typeof (dynamicFormRef.value as any).getFormData === 'function') {
+    const formData = (dynamicFormRef.value as any).getFormData();
+    formDialog.handleSubmit(formData);
   }
 }
+
+// const confirmDialog = useConfirmDialog()
+// const formDialog = useFormDialog()
 </script>
 
 <style scoped>
