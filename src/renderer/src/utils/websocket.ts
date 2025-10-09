@@ -95,6 +95,15 @@ class WebSocketService {
     return true
   }
 
+  // sendWebRtcMessage(data: any): boolean {
+  //   if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+  //     console.error('WebSocket未连接')
+  //     return false
+  //   }
+  //   this.ws.send(JSON.stringify(data))
+  //   return true
+  // }
+
   sendPingMessage(msg: string = 'ping'): boolean {
     const userInfoStore = useUserInfoStore()
     const sender_id = userInfoStore.userId

@@ -8,9 +8,9 @@ interface RoomMember {
   userType: number
   userStatus: number
 
-  audioEnabled: boolean
-  videoEnabled: boolean
-  screenSharing: boolean
+  micStatus: boolean
+  cameraStatus: boolean
+  screenStatus: boolean
 }
 
 export const useRoomStore = defineStore('Room', {
@@ -57,7 +57,26 @@ export const useRoomStore = defineStore('Room', {
         const response = await api.getMeetingMembersInfo()
         if ((response as any).code === 200) {
           console.log('获取会议成员信息成功')
+          console.log(response)
           console.log(response.data)
+
+          // 清空当前成员列表
+          this.roomMembers.clear()
+          // 遍历成员数据并添加到roomMembers Map中
+          response.data.forEach((member: any) => {
+            this.roomMembers.set(member.UserId, {
+              username: member.Username,
+              email: member.Email,
+              sex: member.Sex,
+              userType: member.UserType,
+              userStatus: member.UserStatus,
+              micStatus: member.MicStatus === 1,
+              cameraStatus: member.CameraStatus === 1,
+              screenStatus: member.ScreenStatus === 1
+            })
+          })
+          console.log('roomMembers:')
+          console.log(this.roomMembers)
         }
       } catch (error) {
         return Promise.reject(error)

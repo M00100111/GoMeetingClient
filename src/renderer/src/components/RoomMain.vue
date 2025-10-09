@@ -11,6 +11,7 @@
 <style scoped>
   /* css here */
   .roommain{
+    background-color: red;
     width: 100%;
     height: calc(100% - 100px);
     /* 添加边框 */

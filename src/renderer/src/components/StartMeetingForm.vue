@@ -90,9 +90,13 @@ onMounted(() => {
   formData.value.meetingName = userInfoStore.username+'的会议'
   formData.value.joinType = 0 // 设置加入方式的初始值为"开放加入"
 
-  formData.value.micStatus = userInfoStore.userInfo.micStatus
-  formData.value.cameraStatus = userInfoStore.userInfo.cameraStatus
-  formData.value.screenStatus = userInfoStore.userInfo.screenStatus
+  // formData.value.micStatus = userInfoStore.userInfo.micStatus
+  // formData.value.cameraStatus = userInfoStore.userInfo.cameraStatus
+  // formData.value.screenStatus = userInfoStore.userInfo.screenStatus
+
+  formData.value.micStatus = userInfoStore.userInfo.micStatus ? 1 : 0
+formData.value.cameraStatus = userInfoStore.userInfo.cameraStatus ? 1 : 0
+formData.value.screenStatus = userInfoStore.userInfo.screenStatus ? 1 : 0
 
   // 将userId添加到meetingIDList中
   meetingIDList.value.push(userId)

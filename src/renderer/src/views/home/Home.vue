@@ -59,9 +59,10 @@ import TitleBar from '@/components/TitleBar.vue';
 import { useConfirmDialog } from '@/store/confirmDialog'
 import { useFormDialog } from '@/store/formDialog'
 import BaseDialog from '@/components/BaseDialog.vue'
+import { useUserInfoStore } from '@/store/userInfo';
 const confirmDialog = useConfirmDialog()
 const formDialog = useFormDialog()
-
+const userInfoStore = useUserInfoStore();
 // import UserForm from '@/components/UserForm.vue'
 // import StartMeetingForm from '@/components/StartMeetingForm.vue'
 
@@ -75,7 +76,7 @@ const checkAndConnect = async () => {
   const currentStatus = websocketService.getConnectionStatus()
   if (!currentStatus) {
     console.log('WebSocket未连接,正在建立连接...')
-    const success = await websocketService.connect('ws://localhost:8081/ws')
+    const success = await websocketService.connect(`ws://localhost:8081/ws?token=${userInfoStore.token}`)
     if (success) {
       // 注册全局消息处理器
       registerGlobalHandlers()
@@ -87,7 +88,14 @@ const checkAndConnect = async () => {
 }
 onMounted(() => {
   // 组件挂载时检查并建立连接
-  checkAndConnect()
+  // 确保用户已登录且token存在
+  if (userInfoStore.loginFlag && userInfoStore.token) {
+    console.log('用户已登录，开始建立WebSocket连接');
+    console.log('当前token:', userInfoStore.token);
+    checkAndConnect();
+  } else {
+    console.log('用户未登录或token不存在，延迟WebSocket连接');
+  }
 })
 // 父容器注册ws处理函数
 const registerGlobalHandlers = () => {

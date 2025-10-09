@@ -1,14 +1,14 @@
 <template>
   <div class="roomfooter">
     <div class="user-status">
-      <div class="user-status-botton">
-        <img class="user-status-icon micro" @click="" src="@/assets/icon/micro_close.svg"/>
+      <div class="user-status-botton" @click="changeMicStatus">
+        <img class="user-status-icon micro" :src="userInfoStore.userInfo.micStatus ? microOpenIcon : microCloseIcon"/>
       </div>
-      <div class="user-status-botton">
-        <img class="user-status-icon camera" @click="" src="@/assets/icon/camera_close.svg"/>
+      <div class="user-status-botton" @click="changeCameraStatus" >
+        <img class="user-status-icon camera" :src="userInfoStore.userInfo.cameraStatus ? cameraOpenIcon : cameraCloseIcon"/>
       </div>
-      <div class="user-status-botton">
-        <img class="user-status-icon screen" @click="" src="@/assets/icon/screen_close.svg"/>
+      <div class="user-status-botton" @click="changeScreenStatus">
+        <img class="user-status-icon screen" :src="userInfoStore.userInfo.screenStatus ? screenOpenIcon : screenCloseIcon"/>
       </div>
     </div>
 
@@ -50,13 +50,28 @@ const userType = ref<number | undefined >(undefined );
 
 onMounted(() => {
   // 入会时获取用户信息
-  // 待实现ws推送成员信息变更
-
+  console.log("获取用户信息成功");
   if (userId !== undefined) {
     userType.value = roomStore.roomMembers.get(Number(userId))?.userType;
   }
-  console.log('用户类型:', userType);
+  console.log('用户类型:', userType.value);
 });
+
+import cameraOpenIcon from '@/assets/icon/camera_open.svg'
+import cameraCloseIcon from '@/assets/icon/camera_close.svg'
+import microOpenIcon from '@/assets/icon/micro_open.svg'
+import microCloseIcon from '@/assets/icon/micro_close.svg'
+import screenOpenIcon from '@/assets/icon/screen_open.svg'
+import screenCloseIcon from '@/assets/icon/screen_close.svg'
+function changeCameraStatus() {
+  userInfoStore.changeCameraStatus();
+}
+function changeMicStatus() {
+  userInfoStore.changeMicStatus();
+}
+function changeScreenStatus() {
+  userInfoStore.changeScreenStatus();
+}
 
 const handleLeaveRoom = async () => {
   const response = await api.leaveMeeting({ meetingId: roomStore.roomInfo.meetingId });

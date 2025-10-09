@@ -18,9 +18,9 @@ export const useUserInfoStore = defineStore('userInfo', {
         introduction: '这个人很酷,什么都没有留下。',
         articleLikeSet: [],
         commentLikeSet: [],
-        micStatus: 0,
-        cameraStatus: 0,
-        screenStatus: 0
+        micStatus: false,
+        cameraStatus: false,
+        screenStatus: false
       },
       token: null,
       expireTime: 0
@@ -110,6 +110,16 @@ export const useUserInfoStore = defineStore('userInfo', {
       } catch (error) {
         return Promise.reject(error)
       }
+    },
+    changeMicStatus() {
+      this.userInfo.micStatus = !this.userInfo.micStatus
+    },
+    changeCameraStatus() {
+      this.userInfo.cameraStatus = !this.userInfo.cameraStatus
+      console.log(this.userInfo.cameraStatus)
+    },
+    changeScreenStatus() {
+      this.userInfo.screenStatus = !this.userInfo.screenStatus
     }
   },
   // 持久化token到localStorage

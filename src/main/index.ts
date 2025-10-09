@@ -23,7 +23,13 @@ function createWindow(): void {
       sandbox: false,
       // nodeIntegration: true, // 启用 Node.js 集成
       // contextIsolation: false, // 禁用上下文隔离
-      webSecurity: false //CSP
+      webSecurity: false, //CSP
+
+      // 添加以下配置以支持屏幕共享
+      contextIsolation: true, // 推荐保持为true以确保安全性
+      enablePreferredSizeMode: true, // 确保可以访问媒体设备API
+      nodeIntegration: false, // 保持安全隔离
+      spellcheck: false // 禁用拼写检查以避免冲突
     }
   })
 
@@ -68,7 +74,12 @@ function createNewWindow(route: string): void {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       // 开发环境中可以禁用webSecurity来解决CSP问题
-      webSecurity: false
+      webSecurity: false,
+      // 添加以下配置以支持屏幕共享
+      contextIsolation: true, // 推荐保持为true以确保安全性
+      enablePreferredSizeMode: true, // 确保可以访问媒体设备API
+      nodeIntegration: false, // 保持安全隔离
+      spellcheck: false // 禁用拼写检查以避免冲突
     }
   })
 

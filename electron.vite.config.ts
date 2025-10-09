@@ -15,6 +15,11 @@ export default defineConfig({
         '@': resolve('src/renderer/src')
       }
     },
-    plugins: [vue()]
+    plugins: [vue()],
+    // 前端应用服务器配置
+    server: {
+      host: '127.0.0.1', // 只监听 IPv4来避免 IPv6 相关的权限问题
+      port: 15173 // 15173被WSL设置为保留端口
+    }
   }
 })

@@ -4,7 +4,9 @@ export enum MessageType {
   Pong_Message = 1,
   Notification_Message = 2,
   Chat_Message = 3,
-  Error_Message = 4
+  Error_Message = 4,
+  // WebRTC通过WebScoket传递的信令消息类型
+  WebRTC_Message = 5
 }
 
 // 消息方法枚举
@@ -17,7 +19,15 @@ export enum MessageMethod {
   Meeting_End_Notice_Method = 'Meeting_End_Notification',
   Meeting_Member_Join_Notice_Method = 'Meeting_Member_Join',
   Meeting_Member_Leave_Notice_Method = 'Meeting_Member_Leave',
-  Meeting_Message_Method = 'Meeting_Message'
+  Meeting_Message_Method = 'Meeting_Message',
+  WebRTC_Method = 'WebRTC',
+  // WebRTC
+  WebRTC_Offer_Method = 'Offer',
+  WebRTC_Answer_Method = 'Answer',
+  WebRTC_Ice_Candidate_Method = 'Ice_Candidate',
+  WebRTC_User_Joined_Method = 'User_Joined',
+  WebRTC_User_Left_Method = 'User_Left',
+  WebRTC_Unknown = 'Unknown'
 }
 export function strToMessageMethod(str: string): MessageMethod | null {
   // 遍历枚举所有值，检查是否匹配
