@@ -26,7 +26,7 @@ export const useRoomStore = defineStore('Room', {
       },
 
       // 使用 Map 存储，键为 userId，值为成员信息
-      roomMembers: new Map<number, RoomMember>()
+      roomMembers: new Map<string, RoomMember>()
     }
   },
   actions: {

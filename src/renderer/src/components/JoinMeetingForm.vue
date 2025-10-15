@@ -1,8 +1,14 @@
 <template>
-  <div class="startmeetingform">
+  <div class="joinmeetingform">
     <div class="form-group">
       <label class="form-label">会议ID：</label>
-        <select 
+      <input 
+        v-model="formData.meetingId" 
+        class="form-input" 
+        required 
+        placeholder="请输入会议id"
+      />
+        <!-- <select 
           v-model="formData.meetingId" 
           class="form-input"
           required
@@ -14,58 +20,99 @@
           >
             {{ id }}
           </option>
-        </select>
+        </select> -->
     </div>
     <div class="form-group">
-      <label class="form-label">会议名称：</label>
-      <input 
-        v-model="formData.meetingName" 
-        class="form-input" 
-        required 
-        placeholder="请输入会议名称"
-      />
-    </div>
-    <div class="form-group">
-      <label class="form-label">加入方式：</label>
-      <div class="radio-group">
-        <div class="radio-item">
-          <button 
-            class="radio-button radio-button-left" 
-            :class="{ 'radio-button-active': formData.joinType == 0 }"
-            @click="formData.joinType = 0">
-            开放加入
-          </button>
-        </div>
-        <div class="radio-item">
-          <button 
-            class="radio-button radio-button-right"
-            :class="{ 'radio-button-active': formData.joinType == 1 }"
-            @click="formData.joinType = 1">
-            需要密码
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="form-group" v-if="formData.joinType == 1">
       <label class="form-label">入会密码：</label>
       <input 
         v-model="formData.password" 
         class="form-input" 
-        required 
-        placeholder="请输入5位会议密码"
+        placeholder="请输入5位会议密码,如需要"
       />
     </div>
+
+        <!-- 添加设备状态选择 -->
+    <div class="form-group">
+      <label class="form-label">麦克风：</label>
+      <div class="radio-group">
+        <div class="radio-item">
+          <div 
+            class="radio-button radio-button-left"
+            :class="{ 'radio-button-active': formData.micStatus === 1 }"
+            @click="formData.micStatus = 1"
+          >
+            开启
+          </div>
+        </div>
+        <div class="radio-item">
+          <div 
+            class="radio-button radio-button-right"
+            :class="{ 'radio-button-active': formData.micStatus === 0 }"
+            @click="formData.micStatus = 0"
+          >
+            关闭
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">摄像头：</label>
+      <div class="radio-group">
+        <div class="radio-item">
+          <div 
+            class="radio-button radio-button-left"
+            :class="{ 'radio-button-active': formData.cameraStatus === 1 }"
+            @click="formData.cameraStatus = 1"
+          >
+            开启
+          </div>
+        </div>
+        <div class="radio-item">
+          <div 
+            class="radio-button radio-button-right"
+            :class="{ 'radio-button-active': formData.cameraStatus === 0 }"
+            @click="formData.cameraStatus = 0"
+          >
+            关闭
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">屏幕共享：</label>
+      <div class="radio-group">
+        <div class="radio-item">
+          <div 
+            class="radio-button radio-button-left"
+            :class="{ 'radio-button-active': formData.screenStatus === 1 }"
+            @click="formData.screenStatus = 1"
+          >
+            开启
+          </div>
+        </div>
+        <div class="radio-item">
+          <div 
+            class="radio-button radio-button-right"
+            :class="{ 'radio-button-active': formData.screenStatus === 0 }"
+            @click="formData.screenStatus = 0"
+          >
+            关闭
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
-<script setup lang="ts" name="StartMeetingForm">
+<script setup lang="ts" name="JoinMeetingForm">
 import { ref, defineExpose, onMounted } from 'vue'
 import { useUserInfoStore } from "@/store"
 const userInfoStore = useUserInfoStore()
 const formData = ref({
-  meetingId: 0,
-  meetingName: '',
-  joinType: 0,
+  meetingId: '',
   password: '',
   micStatus: 0,
   cameraStatus: 0,
@@ -74,53 +121,28 @@ const formData = ref({
 // 暴露获取表单数据的方法
 defineExpose({
   getFormData: () => ({
-    meetingId: formData.value.meetingId,
-    meetingName: formData.value.meetingName,
-    joinType: formData.value.joinType,
+    meetingId: Number(formData.value.meetingId) || 0,
     password: formData.value.password,
     micStatus: formData.value.micStatus,
     cameraStatus: formData.value.cameraStatus,
     screenStatus: formData.value.screenStatus
   })
 })
-const meetingIDList = ref<number[]>([])
+// const meetingIDList = ref<number[]>([])
 onMounted(() => {
-  const userId = Number(userInfoStore.userId)
-  formData.value.meetingId = userId
-  formData.value.meetingName = userInfoStore.username+'的会议'
-  formData.value.joinType = 0 // 设置加入方式的初始值为"开放加入"
-
-  // formData.value.micStatus = userInfoStore.userInfo.micStatus
-  // formData.value.cameraStatus = userInfoStore.userInfo.cameraStatus
-  // formData.value.screenStatus = userInfoStore.userInfo.screenStatus
-
+  // const userId = Number(userInfoStore.userId)
+  // formData.value.meetingId = userId
   formData.value.micStatus = userInfoStore.userInfo.micStatus ? 1 : 0
   formData.value.cameraStatus = userInfoStore.userInfo.cameraStatus ? 1 : 0
   formData.value.screenStatus = userInfoStore.userInfo.screenStatus ? 1 : 0
 
   // 将userId添加到meetingIDList中
-  meetingIDList.value.push(userId)
+  // meetingIDList.value.push(userId)
   // 设置默认选中第一个元素
   // if (meetingIDList.value.length > 0) {
   //   formData.value.meetingId = meetingIDList.value[0]
   // }
 })
-
-// 计算属性：校验表单是否有效
-// const isFormValid = computed(() => {
-//   // 校验会议ID是否为12位数字
-//   const meetingIdStr = formData.value.meetingId.toString();
-//   if (meetingIdStr.length !== 12 || !/^\d+$/.test(meetingIdStr)) {
-//     return false;
-//   }
-  
-//   // 如果需要密码，校验密码是否为5位
-//   if (formData.value.joinType === 1) {
-//     return formData.value.password && /^\d{5}$/.test(formData.value.password);
-//   }
-  
-//   return true;
-// })
 </script>
 
 <style scoped>
@@ -189,6 +211,9 @@ onMounted(() => {
   border: 1px solid #ddd;
   -webkit-app-region: no-drag;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .radio-button-active {
   background-color: #007bff;

@@ -32,7 +32,7 @@ export const useUserInfoStore = defineStore('userInfo', {
     loginFlag: (state) => state.login_flag,
     userId: (state) => state.userInfo.userId ?? '',
     username: (state) => state.userInfo.username ?? '',
-    avatar: (state) =>
+    avatar: () =>
       'https://i0.hdslb.com/bfs/article/da03a68e8014974df4900e7397023b1380b1f09e.jpg',
     email: (state) => state.userInfo.email ?? '',
     articleLikeSet: (state) => state.userInfo.articleLikeSet || [],

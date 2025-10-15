@@ -22,6 +22,7 @@ export enum MessageMethod {
   Meeting_Message_Method = 'Meeting_Message',
   WebRTC_Method = 'WebRTC',
   // WebRTC
+  WebRTC_Create_Method = 'Create',
   WebRTC_Offer_Method = 'Offer',
   WebRTC_Answer_Method = 'Answer',
   WebRTC_Ice_Candidate_Method = 'Ice_Candidate',

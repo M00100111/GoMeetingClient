@@ -41,7 +41,7 @@ const colorClass = reactive({
 let noticeTag:number
 
 //通知类弹窗定时关闭
-const closeNotice = watch(modal.value, (newValue) => {    
+watch(modal.value, (newValue) => {    
   if (newValue.show == true && newValue.type == ModalType.notice) {
     noticeTag = Date.now();
     setTimeout(() => {

@@ -85,7 +85,7 @@ export const useModalStore = defineStore('modal', {
             }
           }
         );
-      }).catch(err=>{})  
+      }).catch(()=>{})  
     },
     Warning(content: string): boolean {    
       this.ShowModal(ModalType.warning, 'Warning', content);

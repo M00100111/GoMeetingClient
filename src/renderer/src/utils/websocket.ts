@@ -11,14 +11,11 @@ class WebSocketService {
   private ws: WebSocket | null = null
   private reconnectTimer: any = null
   private messageHandlers = new Map<MessageMethod, MessageHandler>()
-  private url: string = ''
   private isConnected: boolean = false
 
   // 连接WebSocket
   connect(serverUrl: string): Promise<boolean> {
     return new Promise((resolve) => {
-      this.url = serverUrl
-
       try {
         this.ws = new WebSocket(serverUrl)
         // 设置事件回调函数
@@ -31,7 +28,7 @@ class WebSocketService {
         }
         // 接收到ws消息时的触发事件
         this.ws.onmessage = (event) => {
-          console.log('接收到消息', event)
+          // console.log('接收到消息', event)
           this.readMessage(event)
         }
         // 关闭ws连接时的触发事件
@@ -44,6 +41,7 @@ class WebSocketService {
         this.ws.onerror = (error) => {
           console.error('WebSocket错误:', error)
           this.isConnected = false
+          // this.handleReconnect()
           resolve(false)
         }
       } catch (error) {
@@ -154,9 +152,9 @@ class WebSocketService {
       }
       // 处理pong
       if (message.message_type === MessageType.Pong_Message) {
-        const pongData = message.data as PingData
+        // const pongData = message.data as PingData
         // 收到pong响应，连接正常
-        console.log('服务端的Ping响应:', pongData.msg)
+        // console.log('服务端的Ping响应:', pongData.msg)
         return
       }
 
@@ -177,14 +175,14 @@ class WebSocketService {
   }
 
   // 私有方法：断线重连
-  private handleReconnect() {
-    if (this.reconnectTimer) return
+  // private handleReconnect() {
+  //   if (this.reconnectTimer) return
 
-    this.reconnectTimer = setTimeout(() => {
-      console.log('尝试重新连接...')
-      this.connect(this.url)
-    }, 3000)
-  }
+  //   this.reconnectTimer = setTimeout(() => {
+  //     console.log('尝试重新连接...')
+  //     this.connect(this.url)
+  //   }, 3000)
+  // }
 
   // 私有方法：开始ping
   private startPing() {

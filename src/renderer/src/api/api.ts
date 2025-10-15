@@ -1,6 +1,5 @@
 import { baseRequest, userRequest, toolRequest, meetingRequest } from '@/api/http'
 import type { ArticleFormInterface } from '@/types/article.d.ts'
-import { endianness } from 'os'
 // 当请求为post时，若需携带token但无数据可req需要{ }占位，否则配置项错误无法携带token
 export default {
   // 工具相关api
@@ -12,6 +11,7 @@ export default {
 
   // 会议相关api
   startMeeting: (data = {}) => meetingRequest.post('/startmeeting', data, { needToken: true }),
+  joinMeeting: (data = {}) => meetingRequest.post('/joinmeeting', data, { needToken: true }),
   getMeetingInfo: () => meetingRequest.get('/getmeetinginfo', { needToken: true }),
   endMeeting: (data = {}) => meetingRequest.post('/endmeeting', data, { needToken: true }),
   leaveMeeting: (data = {}) => meetingRequest.post('/leavemeeting', data, { needToken: true }),

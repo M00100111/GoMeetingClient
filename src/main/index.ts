@@ -29,7 +29,12 @@ function createWindow(): void {
       contextIsolation: true, // 推荐保持为true以确保安全性
       enablePreferredSizeMode: true, // 确保可以访问媒体设备API
       nodeIntegration: false, // 保持安全隔离
-      spellcheck: false // 禁用拼写检查以避免冲突
+      spellcheck: false, // 禁用拼写检查以避免冲突
+
+      // 添加WebRTC支持所需配置
+      webgl: true, // 启用WebGL支持
+      experimentalFeatures: true, // 启用实验性功能
+      autoplayPolicy: 'no-user-gesture-required' // 允许自动播放媒体
     }
   })
 
@@ -43,9 +48,11 @@ function createWindow(): void {
   })
 
   // 👇 在这里添加打开开发者工具的代码
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.webContents.openDevTools({ mode: 'detach' })
-  }
+  // if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+  //   mainWindow.webContents.openDevTools({ mode: 'detach' })
+  // }
+  // 各种环境都支持自动打开开发者工具
+  // mainWindow.webContents.openDevTools({ mode: 'detach' })
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
@@ -79,13 +86,21 @@ function createNewWindow(route: string): void {
       contextIsolation: true, // 推荐保持为true以确保安全性
       enablePreferredSizeMode: true, // 确保可以访问媒体设备API
       nodeIntegration: false, // 保持安全隔离
-      spellcheck: false // 禁用拼写检查以避免冲突
+      spellcheck: false, // 禁用拼写检查以避免冲突
+
+      // 添加WebRTC支持所需配置
+      webgl: true, // 启用WebGL支持
+      experimentalFeatures: true, // 启用实验性功能
+      autoplayPolicy: 'no-user-gesture-required' // 允许自动播放媒体
     }
   })
 
   meetingWindow.on('ready-to-show', () => {
     meetingWindow.show()
   })
+
+  // 各种环境都支持自动打开开发者工具
+  // mainWindow.webContents.openDevTools({ mode: 'detach' })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     meetingWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/#${route}`)
@@ -110,6 +125,10 @@ function createNewWindow(route: string): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  // 添加WebRTC相关配置
+  app.commandLine.appendSwitch('disable-features', 'WebRtcHideLocalIpsWithMdns')
+  app.commandLine.appendSwitch('enable-features', 'WebRtcEchoCancellation')
+
   if (is.dev) {
     // 手动加载 Vue DevTools
     session.defaultSession.extensions
@@ -123,6 +142,7 @@ app.whenReady().then(() => {
         console.log('Failed to load Vue DevTools:', err)
       })
   }
+
   // if (is.dev) {
   //   loadVueDevTools()
   // }
@@ -170,7 +190,7 @@ app.whenReady().then(() => {
   })
 
   // 注册F12快捷键打开开发者工具
-  globalShortcut.register('F12', () => {
+  globalShortcut.register('Ctrl+Shift+I', () => {
     const focusedWindow = BrowserWindow.getFocusedWindow()
     if (focusedWindow) {
       focusedWindow.webContents.toggleDevTools()

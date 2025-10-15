@@ -75,6 +75,7 @@ const getMicrophoneStream = async () => {
     return stream;
   } catch (error) {
     console.error('获取麦克风失败:', error);
+    return null;
   }
 };
 
@@ -88,6 +89,7 @@ const stopMicrophoneStream = () => {
 
 // 暴露方法给父组件使用
 defineExpose({
+  audioStream,
   getAllMicrophoneDevices,
   getMicrophoneStream,
   stopMicrophoneStream

@@ -24,13 +24,13 @@
         </div>
         <span class="meeting-icon-span">快速会议</span>
       </div>
-      <div class="meeting-button" @click="showConfirmDialog">
+      <div class="meeting-button" @click="openJoinMeetingForm">
         <div class="meeting-button-bottom">
           <img class="meeting-icon join-icon" src="@/assets/icon/join.svg">
         </div>
         <span class="meeting-icon-span">加入会议</span>
       </div>
-      <div class="meeting-button">
+      <div class="meeting-button" @click="showConfirmDialog">
         <div class="meeting-button-bottom">
           <img class="meeting-icon appoint-icon" src="@/assets/icon/appoint.svg">
         </div>
@@ -51,9 +51,9 @@
 <script setup lang="ts" name="Meeting">
 import '@/styles/fonts.css'
 import { reactive, onMounted } from 'vue';
-import UserForm from '@/components/UserForm.vue'
+// import UserForm from '@/components/UserForm.vue'
 import StartMeetingForm from '@/components/StartMeetingForm.vue'
-
+import JoinMeetingForm from '@/components/JoinMeetingForm.vue'
 
 // 对象类型
 let date = reactive({
@@ -94,16 +94,16 @@ const showConfirmDialog = () => {
 }
 
 // 打开用户表单
-const openUserForm = () => {
-  formDialog.open({
-    title: '用户信息',
-    component: UserForm,
-    onSubmit: (data) => {
-      console.log('用户表单提交数据:', data)
-      // 处理提交逻辑
-    }
-  })
-}
+// const openUserForm = () => {
+//   formDialog.open({
+//     title: '用户信息',
+//     component: UserForm,
+//     onSubmit: (data) => {
+//       console.log('用户表单提交数据:', data)
+//       // 处理提交逻辑
+//     }
+//   })
+// }
 
 // 打开会议表单
 const openStartMeetingForm = () => {
@@ -115,32 +115,73 @@ const openStartMeetingForm = () => {
       meetingType: 'video'
     },
     onSubmit: (data) => {
-      console.log('会议表单提交数据:', data)
+      console.log('开启会议表单提交数据:', data)
       // 处理提交逻辑
       doStartMeeting(data)
       
     }
   })
 }
+import { useUserInfoStore } from "@/store"
+const userInfoStore = useUserInfoStore()
+// 打开会议表单
+const openJoinMeetingForm = () => {
+  formDialog.open({
+    title: '加入会议',
+    component: JoinMeetingForm,
+    componentProps: {
+      // 可以传递特定属性给组件
+      meetingType: 'video'
+    },
+    onSubmit: (data) => {
+      console.log('加入会议表单提交数据:', data)
+      // 根据用户设置修改设备状态
+      userInfoStore.userInfo.micStatus = data.micStatus==1 ? true : false
+      userInfoStore.userInfo.cameraStatus = data.cameraStatus==1 ? true : false
+      userInfoStore.userInfo.screenStatus = data.screenStatus==1 ? true : false
+      console.log(userInfoStore.userInfo);
+      // 处理提交逻辑
+      doJoinMeeting(data)
+    }
+  })
+}
 
 import api from "@/api/api"
-  //定义开启会议函数
-  const doStartMeeting = async (data) => {
-    //调用登录接口
-    try {
-      const response = await api.startMeeting(data) as any;
-      // 如果请求成功且业务状态码为200
-      if (response.code) {
-        
-      }
+//定义开启会议函数
+const doStartMeeting = async (data) => {
+  //调用登录接口
+  try {
+    const response = await api.startMeeting(data) as any;
+    // 如果请求成功且业务状态码为200
+    console.log(response);
+    if (response.code == 200) {
       console.log("成功开启会议!!!");
-      createMeetingWindow()
-    } catch (error) {
-      // 请求失败或业务状态码非200
-      console.log("开启会议失败");
-      console.log(error);
+      createMeetingWindow()  
     }
+  } catch (error) {
+    // 请求失败或业务状态码非200
+    console.log("开启会议失败");
+    console.log(error);
   }
+}
+
+//定义加入会议函数
+const doJoinMeeting = async (data) => {
+  //调用登录接口
+  try {
+    const response = await api.joinMeeting(data) as any;
+    console.log(response);
+    // 如果请求成功且业务状态码为200
+    if (response.code == 200) {
+      console.log("成功加入会议!!!");
+      createMeetingWindow()
+    }
+  } catch (error) {
+    // 请求失败或业务状态码非200
+    console.log("加入会议失败");
+    console.log(error);
+  }
+}
 
 
 // 创建新的会议窗口

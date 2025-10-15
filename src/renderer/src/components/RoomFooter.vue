@@ -52,8 +52,12 @@ onMounted(() => {
   // 入会时获取用户信息
   console.log("获取用户信息成功");
   if (userId !== undefined) {
-    userType.value = roomStore.roomMembers.get(Number(userId))?.userType;
+    userType.value = roomStore.roomMembers.get(userId)?.userType;
   }
+  console.log("Footer组件中访问成员信息");
+  console.log(roomStore.roomMembers);
+  console.log('用户ID:', userId);
+  console.log('成员信息中的用户类型:', roomStore.roomMembers.get(userId)?.userType);
   console.log('用户类型:', userType.value);
 });
 

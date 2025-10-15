@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { useAppStore, useUserInfoStore, useModalStore } from '@/store'
+import { useUserInfoStore, useModalStore } from '@/store'
 
 //使用接口合并为config添加自定义属性
 declare module 'axios' {
@@ -117,7 +117,7 @@ function responseFail(error: any) {
     const userStore = useUserInfoStore()
     userStore.resetLoginState()
     // 登录弹框
-    const appStore = useAppStore()
+    // const appStore = useAppStore()
     // appStore.setLoginFlag(true)
   }
   return Promise.reject(error)
