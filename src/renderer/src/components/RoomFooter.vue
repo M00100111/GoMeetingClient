@@ -28,10 +28,10 @@
       <div class="room-menu-botton exit-botton" @click="showEndConfirmDialog"
       v-if="userType !== undefined  && userType != 0"
       >
-        <img class="room-menu-icon end" @click="" src="@/assets/icon/end.svg"/>
+        <img class="room-menu-icon end" src="@/assets/icon/end.svg"/>
       </div>
       <div class="room-menu-botton exit-botton" @click="showLeaveConfirmDialog">
-        <img class="room-menu-icon exit" @click="" src="@/assets/icon/exit.svg"/>
+        <img class="room-menu-icon exit" src="@/assets/icon/exit.svg"/>
       </div>
     </div>
   </div>
@@ -77,12 +77,17 @@ function changeScreenStatus() {
   userInfoStore.changeScreenStatus();
 }
 
+// 将多窗口改为单页面路由跳转
+import { useRouter } from 'vue-router'
+const router = useRouter()
+
 const handleLeaveRoom = async () => {
   const response = await api.leaveMeeting({ meetingId: roomStore.roomInfo.meetingId });
   if ((response as any).code === 200) {
     console.log('退出会议成功')
     roomStore.leaveRoom();
-    (window as any).MyAPI.closeWindow();
+    // (window as any).MyAPI.closeWindow();
+    router.replace('/')
   } else {
     console.log('退出会议失败')
   }
@@ -93,7 +98,8 @@ const handleEndRoom = async () => {
   if ((response as any).code === 200) {
     console.log('结束会议成功')
     roomStore.leaveRoom();
-    (window as any).MyAPI.closeWindow();
+    // (window as any).MyAPI.closeWindow();
+    router.replace('/')
   } else {
     console.log('结束会议失败')
   }

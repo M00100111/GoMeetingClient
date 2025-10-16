@@ -42,8 +42,6 @@
         </div>
         <span class="meeting-icon-span">屏幕共享</span>
       </div>
-      
-      
     </div>
   </div>
 </template>
@@ -118,7 +116,6 @@ const openStartMeetingForm = () => {
       console.log('开启会议表单提交数据:', data)
       // 处理提交逻辑
       doStartMeeting(data)
-      
     }
   })
 }
@@ -183,16 +180,14 @@ const doJoinMeeting = async (data) => {
   }
 }
 
-
+// 将多窗口改为单页面路由跳转
+import { useRouter } from 'vue-router'
+const router = useRouter()
 // 创建新的会议窗口
 const createMeetingWindow = () => {
-  (window as any).MyAPI.createNewWindow('/room')
+  // (window as any).MyAPI.createNewWindow('/room')
+  router.replace('/room')
 }
-// // 创建新的会议窗口
-// const createLoginWindow = () => {
-//   (window as any).MyAPI.createNewWindow('/login')
-// }
-
 </script>
 
 <style scoped>
