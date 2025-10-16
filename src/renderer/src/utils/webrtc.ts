@@ -22,6 +22,39 @@ class WebRTCMediaService {
     this.initSocketListeners()
   }
 
+  // 添加触发重新协商的方法
+  private async triggerRenegotiation(pc: RTCPeerConnection) {
+    try {
+      // 查找对应的用户ID
+      let targetUserId = ''
+      for (const [userId, peerConnection] of Object.entries(this.peerConnections)) {
+        if (peerConnection === pc) {
+          targetUserId = userId
+          break
+        }
+      }
+
+      if (!targetUserId) {
+        console.error('无法找到对应的用户ID')
+        return
+      }
+
+      // 创建新的offer
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+
+      // 发送offer到远程端
+      this.sendSignalMessage(MessageMethod.WebRTC_Offer_Method, {
+        receiverId: targetUserId,
+        offer: pc.localDescription
+      })
+
+      console.log('重新协商已触发，发送新的offer')
+    } catch (error) {
+      console.error('触发重新协商失败:', error)
+    }
+  }
+
   // 注册视频流（如摄像头流和屏幕流）,默认注册摄像头流
   registerVideoStream(videoStream: MediaStream, streamType: 'camera' | 'screen' = 'camera') {
     videoStream.getVideoTracks().forEach((track) => {
@@ -31,29 +64,24 @@ class WebRTCMediaService {
       // 只在需要替换特定轨道时才移除
       this.combinedStream.addTrack(track)
     })
-    // 更新所有连接中的轨道
-    // Object.values(this.peerConnections).forEach((pc) => {
-    //   videoStream.getVideoTracks().forEach((track) => {
-    //     try {
-    //       pc.addTrack(track, this.combinedStream)
-    //     } catch (error) {
-    //       console.warn(`添加视频轨道(${streamType})到连接失败:`, error)
-    //     }
-    //   })
-    // })
-    // Object.values(this.peerConnections).forEach((pc) => {
-    //   videoStream.getVideoTracks().forEach((track) => {
-    //     // 检查轨道是否已经添加到连接中
-    //     const senderExists = pc.getSenders().some((sender) => sender.track === track)
-    //     if (!senderExists) {
-    //       try {
-    //         pc.addTrack(track, this.combinedStream)
-    //       } catch (error) {
-    //         console.warn(`添加视频轨道(${streamType})到连接失败:`, error)
-    //       }
-    //     }
-    //   })
-    // })
+
+    // 为已建立的webrtc连接动态添加轨道并触发重新协商
+    Object.values(this.peerConnections).forEach((pc) => {
+      videoStream.getVideoTracks().forEach((track) => {
+        const senderExists = pc.getSenders().some((sender) => sender.track === track)
+        if (!senderExists) {
+          try {
+            pc.addTrack(track, this.combinedStream)
+            console.log(`成功添加视频轨道(${streamType})到连接`)
+            // 触发重新协商
+            this.triggerRenegotiation(pc)
+          } catch (error) {
+            console.warn(`添加视频轨道(${streamType})到连接失败:`, error)
+          }
+        }
+      })
+    })
+
     console.log(`视频流(${streamType})已注册到组合流`)
     console.log(this.combinedStream)
   }
@@ -77,18 +105,25 @@ class WebRTCMediaService {
       this.combinedStream.addTrack(track)
     })
 
-    // 更新所有连接中的轨道
+    // 更新所有连接中的轨道并触发重新协商
     Object.values(this.peerConnections).forEach((pc) => {
       audioStream.getAudioTracks().forEach((track) => {
-        try {
-          pc.addTrack(track, this.combinedStream)
-        } catch (error) {
-          console.warn(`添加音频轨道(${streamType})到连接失败:`, error)
+        const senderExists = pc.getSenders().some((sender) => sender.track === track)
+        if (!senderExists) {
+          try {
+            pc.addTrack(track, this.combinedStream)
+            console.log(`成功添加音频轨道(${streamType})到连接`)
+            // 触发重新协商
+            this.triggerRenegotiation(pc)
+          } catch (error) {
+            console.warn(`添加音频轨道(${streamType})到连接失败:`, error)
+          }
         }
       })
     })
 
     console.log(`音频流(${streamType})已注册到组合流`)
+    console.log(this.combinedStream)
   }
 
   // 复用注册麦克风流方法以注册系统音频流
@@ -194,19 +229,6 @@ class WebRTCMediaService {
     const peerConnection = new RTCPeerConnection(configuration)
     // console.log('创建RTCPeerConnection完成:', userId)
 
-    // 添加本地流
-    // if (this.localStream && this.localStream.getTracks().length > 0) {
-    //   this.localStream.getTracks().forEach((track) => {
-    //     console.log(`添加本地轨道[${userId}]:`, track.kind, track.id)
-    //     try {
-    //       peerConnection.addTrack(track, this.localStream!)
-    //     } catch (error) {
-    //       console.error(`添加本地轨道失败[${userId}]:`, error)
-    //     }
-    //   })
-    // } else {
-    //   console.warn(`没有本地轨道可添加[${userId}]`)
-    // }
     console.log('本地流:', this.combinedStream)
     if (this.combinedStream && this.combinedStream.getTracks().length > 0) {
       this.combinedStream.getTracks().forEach((track) => {
@@ -338,11 +360,9 @@ class WebRTCMediaService {
 
   // 注册处理函数到ws
   private initSocketListeners() {
-    this.socket.registerHandlers(MessageMethod.WebRTC_Create_Method, (data) => {
-      console.log('接收到创建Offer信令:', data)
-      console.log(this.combinedStream)
-      this.createOffer(data.receiverId)
-    })
+    // this.socket.registerHandlers(MessageMethod.WebRTC_Create_Method, (data) => {
+    //   this.createOffer(data.receiverId)
+    // })
 
     this.socket.registerHandlers(MessageMethod.WebRTC_Offer_Method, (data) => {
       this.handleOffer(data)
@@ -369,8 +389,17 @@ class WebRTCMediaService {
   private async handleOffer(data: any) {
     try {
       console.log('接收到 Offer 信令:', data)
-      // 根据请求方ID建立WebRTC连接实例
-      const peerConnection = await this.createPeerConnection(data.senderId)
+      let peerConnection
+
+      // 检查是否已存在连接（重新协商情况）
+      if (this.peerConnections[data.senderId]) {
+        peerConnection = this.peerConnections[data.senderId]
+        console.log('处理重新协商的 Offer')
+      } else {
+        // 创建新的连接
+        peerConnection = await this.createPeerConnection(data.senderId)
+      }
+
       await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer))
 
       // 根据连接实例创建 Answer 信令
