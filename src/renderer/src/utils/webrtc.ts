@@ -1,7 +1,6 @@
 // webrtc.ts
 import { websocketService } from './websocket'
 import { MessageType, MessageMethod } from '@/types/message'
-export { WebRTCMediaService }
 // 定义WebRtc服务类
 class WebRTCMediaService {
   // WebSocket 连接实例，用于信令传输

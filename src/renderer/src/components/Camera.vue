@@ -14,6 +14,8 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 const videoRef = ref<HTMLVideoElement | null>(null);
 const cameraStream = ref<MediaStream | null>(null);
+// WebRTC
+import { webRTCMediaService } from '@/utils/webrtc'
 // 获取所有摄像头设备信息
 const getAllCameraDevices = async () => {
   try {
@@ -152,9 +154,6 @@ const createVirtualStream = (): MediaStream => {
   
   return stream;
 };
-
-// WebRTC
-import { webRTCMediaService } from '@/utils/webrtc'
 
 onMounted(async () => {
   // 获取所有摄像头设备信息
