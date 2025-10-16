@@ -411,6 +411,23 @@ class WebRTCMediaService {
       console.log('收到 ICE Candidate 信令:', data)
       const peerConnection = this.peerConnections[data.senderId]
       if (peerConnection) {
+        // 处理 ICE 收集完成的情况
+        if (data.candidate === null) {
+          console.log('ICE候选收集完成:', data.senderId)
+          return
+        }
+
+        // 验证候选数据
+        if (
+          !data.candidate ||
+          (!data.candidate.candidate &&
+            !data.candidate.sdpMid &&
+            data.candidate.sdpMLineIndex === undefined)
+        ) {
+          console.warn('无效的 ICE Candidate 数据')
+          return
+        }
+
         await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate))
         console.log('成功添加ICE候选:', data.senderId)
       }
