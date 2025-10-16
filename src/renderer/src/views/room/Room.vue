@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts" name="Room">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
 import RoomHeader from '@/components/RoomHeader.vue';
 import RoomMain from '@/components/RoomMain.vue';
@@ -54,9 +54,6 @@ onMounted(async () => {
     await roomStore.getRoomMembersInfo()
 
     dataLoaded.value = true; // 数据加载完成后设置为 true
-
-    // 等待所有组件初始化完成
-    await nextTick()
   } catch (error) { 
     console.error(error)
   }

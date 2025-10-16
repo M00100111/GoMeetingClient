@@ -1,6 +1,13 @@
 // webrtc.ts
 import { websocketService } from './websocket'
 import { MessageType, MessageMethod } from '@/types/message'
+import { useRoomStore } from '@/store/room'
+import { useUserInfoStore } from '@/store'
+
+// 已实现WebRTC功能，需要完善以下功能：
+// 已完成注册媒体流时根据会议室成员建立webrtc连接
+// 待实现后续新成员加入时，需要处理
+
 // 定义WebRtc服务类
 class WebRTCMediaService {
   // WebSocket 连接实例，用于信令传输
@@ -57,6 +64,11 @@ class WebRTCMediaService {
 
   // 注册视频流（如摄像头流和屏幕流）,默认注册摄像头流
   registerVideoStream(videoStream: MediaStream, streamType: 'camera' | 'screen' = 'camera') {
+    const userInfoStore = useUserInfoStore()
+    const currentUserId = userInfoStore.userId
+    const roomStore = useRoomStore()
+
+    // 注册轨道到组合流
     videoStream.getVideoTracks().forEach((track) => {
       // 为轨道添加类型标识
       ;(track as any).streamType = streamType
@@ -65,22 +77,34 @@ class WebRTCMediaService {
       this.combinedStream.addTrack(track)
     })
 
-    // 为已建立的webrtc连接动态添加轨道并触发重新协商
-    Object.values(this.peerConnections).forEach((pc) => {
-      videoStream.getVideoTracks().forEach((track) => {
-        const senderExists = pc.getSenders().some((sender) => sender.track === track)
-        if (!senderExists) {
-          try {
-            pc.addTrack(track, this.combinedStream)
-            console.log(`成功添加视频轨道(${streamType})到连接`)
-            // 触发重新协商
-            this.triggerRenegotiation(pc)
-          } catch (error) {
-            console.warn(`添加视频轨道(${streamType})到连接失败:`, error)
+    // 遍历房间成员，为每个成员处理连接
+    for (const userId of roomStore.roomMembers.keys()) {
+      // 跳过当前用户自己
+      if (userId === currentUserId) {
+        continue
+      }
+      // 如果连接已存在，则添加轨道并触发重新协商
+      if (this.peerConnections[userId]) {
+        videoStream.getVideoTracks().forEach((track) => {
+          const senderExists = this.peerConnections[userId]
+            .getSenders()
+            .some((sender) => sender.track === track)
+          if (!senderExists) {
+            try {
+              this.peerConnections[userId].addTrack(track, this.combinedStream)
+              console.log(`成功添加视频轨道(${streamType})到连接[${userId}]`)
+              // 触发重新协商
+              this.triggerRenegotiation(this.peerConnections[userId])
+            } catch (error) {
+              console.warn(`添加视频轨道(${streamType})到连接[${userId}]失败:`, error)
+            }
           }
-        }
-      })
-    })
+        })
+      } else {
+        // 如果连接不存在，则创建新的Offer
+        this.createOffer(userId)
+      }
+    }
 
     console.log(`视频流(${streamType})已注册到组合流`)
     console.log(this.combinedStream)

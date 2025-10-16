@@ -69,6 +69,11 @@ export interface NotificationData {
   msg: string
 }
 
+export interface MeetingMemberJoinNoticeData {
+  meetingId: number
+  userId: number
+}
+
 // 聊天和消息类型枚举
 export enum ChatType {
   SingleChat = 0,

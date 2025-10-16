@@ -158,6 +158,7 @@ class WebSocketService {
         return
       }
 
+      console.log('收到消息:', message)
       // 调用对应的消息处理器
       // ✅ 1. 将字符串 method 转为枚举值
       const method = strToMessageMethod(message.method)

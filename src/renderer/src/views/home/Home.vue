@@ -97,6 +97,10 @@ onMounted(() => {
     console.log('用户未登录或token不存在，延迟WebSocket连接');
   }
 })
+
+import { MessageMethod } from '@/types/message'
+import { useRoomStore } from '@/store/room';
+const roomStore = useRoomStore();
 // 父容器注册ws处理函数
 const registerGlobalHandlers = () => {
   // 聊天消息处理器
@@ -104,18 +108,18 @@ const registerGlobalHandlers = () => {
   //   console.log('全局收到聊天消息:', data)
   //   // 这里可以触发全局事件总线或更新全局状态
   //   // 比如显示全局通知、更新未读消息数等
-  
+
   //   // 根据你的MessageHandler类型，需要返回boolean
   //   return true // 处理成功
   // })
 
-  // // 通知消息处理器
-  // websocketService.registerHandlers(MessageMethod.Notification_Method, (data: any) => {
-  //   console.log('全局收到通知:', data)
-  //   // 处理全局通知，比如显示Toast通知
-  
-  //   return true
-  // })
+  // 通知消息处理器
+  websocketService.registerHandlers(MessageMethod.Meeting_Member_Join_Notice_Method, async(data: any) => {
+    console.log('收到新成员入会通知:', data)
+    // 处理全局通知，比如显示Toast通知
+    await roomStore.getRoomMembersInfo()
+    return true
+  })
 
   // // 会议开始通知处理器
   // websocketService.registerHandlers(MessageMethod.Meeting_Start_Notice_Method, (data: any) => {
