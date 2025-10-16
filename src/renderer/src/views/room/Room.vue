@@ -57,21 +57,7 @@ onMounted(async () => {
 
     // 等待所有组件初始化完成
     await nextTick()
-
-    // 初始化 WebRTC 服务
-
   } catch (error) { 
-    console.error(error)
-  }
-})
-
-onMounted(async () => {
-  try {
-    const result = await roomStore.getRoomInfo()
-    console.log('获取会议信息成功:', result)
-    await roomStore.getRoomMembersInfo()
-    dataLoaded.value = true
-  } catch (error) {
     console.error(error)
   }
 })

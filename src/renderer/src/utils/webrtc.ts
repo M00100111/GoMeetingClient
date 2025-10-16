@@ -1,18 +1,7 @@
 // webrtc.ts
 import { websocketService } from './websocket'
 import { MessageType, MessageMethod } from '@/types/message'
-
-// 客户端 A 申请建立WebRtc连接，先创建信令并发送至WS服务端已转发到客户端B
-// createOffer()
-// 客户端 B 同意建立WebRtc连接
-// 客户端 B 接收Offer信令并建立远程连接
-// createPeerConnection()
-// B->>B: setRemoteDescription(offer)
-// createAnswer()
-// 客户端A接收Answer信令并建立远程连接
-// createPeerConnection()
-// A->>A: setRemoteDescription(answer)
-
+export { WebRTCMediaService }
 // 定义WebRtc服务类
 class WebRTCMediaService {
   // WebSocket 连接实例，用于信令传输
@@ -20,8 +9,6 @@ class WebRTCMediaService {
   // 存储所有对等连接的映射表，以用户ID为键
   private peerConnections: { [key: string]: RTCPeerConnection }
   // 本地媒体流（音视频）
-  private localStream: MediaStream | null
-  // 组合流管理
   private combinedStream: MediaStream
 
   // 构造器
@@ -30,7 +17,8 @@ class WebRTCMediaService {
     this.peerConnections = {}
     // 初始化为空流而不是null
     this.combinedStream = new MediaStream()
-    this.localStream = this.combinedStream // 使用组合流作为本地流
+    console.log('初始化组合流')
+    console.log(this.combinedStream)
     // 注册处理函数到Ws
     this.initSocketListeners()
   }
@@ -45,16 +33,30 @@ class WebRTCMediaService {
       this.combinedStream.addTrack(track)
     })
     // 更新所有连接中的轨道
-    Object.values(this.peerConnections).forEach((pc) => {
-      videoStream.getVideoTracks().forEach((track) => {
-        try {
-          pc.addTrack(track, this.combinedStream)
-        } catch (error) {
-          console.warn(`添加视频轨道(${streamType})到连接失败:`, error)
-        }
-      })
-    })
+    // Object.values(this.peerConnections).forEach((pc) => {
+    //   videoStream.getVideoTracks().forEach((track) => {
+    //     try {
+    //       pc.addTrack(track, this.combinedStream)
+    //     } catch (error) {
+    //       console.warn(`添加视频轨道(${streamType})到连接失败:`, error)
+    //     }
+    //   })
+    // })
+    // Object.values(this.peerConnections).forEach((pc) => {
+    //   videoStream.getVideoTracks().forEach((track) => {
+    //     // 检查轨道是否已经添加到连接中
+    //     const senderExists = pc.getSenders().some((sender) => sender.track === track)
+    //     if (!senderExists) {
+    //       try {
+    //         pc.addTrack(track, this.combinedStream)
+    //       } catch (error) {
+    //         console.warn(`添加视频轨道(${streamType})到连接失败:`, error)
+    //       }
+    //     }
+    //   })
+    // })
     console.log(`视频流(${streamType})已注册到组合流`)
+    console.log(this.combinedStream)
   }
 
   // 复用注册摄像头流方法以注册屏幕流
@@ -158,62 +160,12 @@ class WebRTCMediaService {
         totalTracks: 0
       }
     }
-
     return {
       videoTracks: this.combinedStream.getVideoTracks().length,
       audioTracks: this.combinedStream.getAudioTracks().length,
       totalTracks: this.combinedStream.getTracks().length
     }
   }
-
-  // 将本地流推送到所有对等连接
-  // setLocalStream(stream: MediaStream) {
-  //   this.localStream = stream
-
-  //   // 显示本地视频
-  //   const localVideo = document.getElementById('local-video') as HTMLVideoElement | null
-  //   if (localVideo) {
-  //     localVideo.srcObject = stream
-  //   }
-
-  //   // 将流添加到所有已存在的连接中
-  //   Object.values(this.peerConnections).forEach((pc) => {
-  //     stream.getTracks().forEach((track) => {
-  //       pc.addTrack(track, stream)
-  //     })
-  //   })
-  // }
-
-  // 更新流（用于动态添加/删除轨道）
-  // updateLocalStream(newStream: MediaStream) {
-  //   if (this.localStream) {
-  //     // 停止旧流的所有轨道
-  //     this.localStream.getTracks().forEach((track) => track.stop())
-  //   }
-
-  //   this.localStream = newStream
-
-  //   // 更新本地显示
-  //   const localVideo = document.getElementById('local-video') as HTMLVideoElement | null
-  //   if (localVideo) {
-  //     localVideo.srcObject = newStream
-  //   }
-
-  //   // 更新所有现有连接
-  //   Object.values(this.peerConnections).forEach((pc) => {
-  //     // 移除旧发送者
-  //     pc.getSenders().forEach((sender) => {
-  //       pc.removeTrack(sender)
-  //     })
-
-  //     // 添加新轨道
-  //     if (newStream) {
-  //       newStream.getTracks().forEach((track) => {
-  //         pc.addTrack(track, newStream)
-  //       })
-  //     }
-  //   })
-  // }
 
   // 借助WebSocket服务发送信令
   private sendSignalMessage(method: MessageMethod, data: any) {
@@ -225,80 +177,55 @@ class WebRTCMediaService {
   // 为目标用户创建对应的 WebRTC 连接实例
   // 先创建WebRTC连接实例再根据实例创建Offer信令
   async createPeerConnection(userId: string) {
-    console.log('创建WebRTC连接实例:', userId)
+    console.log(`为目标用户(${userId})创建WebRTC连接实例`)
     const configuration = {
+      // 配置 STUN 服务器列表用于 NAT 穿透
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
         { urls: 'stun:stun.stunprotocol.org:3478' },
         { urls: 'stun:stun.cloudflare.com:3478' }
       ],
+      // 设置 ICE 候选池大小和传输策略
       iceCandidatePoolSize: 10,
       iceTransportPolicy: 'all' as RTCIceTransportPolicy
     }
-
-    console.log('RTC配置:', configuration)
+    // console.log('RTC配置:', configuration)
+    // 创建 RTCPeerConnection 实例
     const peerConnection = new RTCPeerConnection(configuration)
-    console.log('创建RTCPeerConnection完成:', userId)
-
-    // 添加连接状态变化监听
-    peerConnection.onconnectionstatechange = () => {
-      console.log(`连接状态变化[${userId}]:`, peerConnection.connectionState)
-      switch (peerConnection.connectionState) {
-        case 'connected':
-          console.log(`WebRTC连接已建立[${userId}]`)
-          break
-        case 'disconnected':
-          console.warn(`WebRTC连接断开[${userId}]`)
-          break
-        case 'failed':
-          console.error(`WebRTC连接失败[${userId}]`)
-          break
-        case 'closed':
-          console.log(`WebRTC连接已关闭[${userId}]`)
-          break
-      }
-    }
-
-    peerConnection.oniceconnectionstatechange = () => {
-      console.log(`ICE连接状态变化[${userId}]:`, peerConnection.iceConnectionState)
-      if (peerConnection.iceConnectionState === 'failed') {
-        console.error(`ICE连接失败[${userId}]`)
-        // 可以尝试重新连接或提示用户
-      }
-    }
-
-    peerConnection.onsignalingstatechange = () => {
-      console.log(`信令状态变化[${userId}]:`, peerConnection.signalingState)
-    }
-
-    // 添加ICE收集状态监听
-    peerConnection.onicegatheringstatechange = () => {
-      console.log(`ICE收集状态[${userId}]:`, peerConnection.iceGatheringState)
-      if (peerConnection.iceGatheringState === 'complete') {
-        console.log(`ICE候选收集完成[${userId}]`)
-      }
-    }
-
-    // 添加ICE错误监听
-    peerConnection.onicecandidateerror = (event) => {
-      console.error(`ICE候选收集错误[${userId}]:`, event.errorCode, event.errorText, event.url)
-    }
+    // console.log('创建RTCPeerConnection完成:', userId)
 
     // 添加本地流
-    if (this.localStream) {
-      this.localStream.getTracks().forEach((track) => {
+    // if (this.localStream && this.localStream.getTracks().length > 0) {
+    //   this.localStream.getTracks().forEach((track) => {
+    //     console.log(`添加本地轨道[${userId}]:`, track.kind, track.id)
+    //     try {
+    //       peerConnection.addTrack(track, this.localStream!)
+    //     } catch (error) {
+    //       console.error(`添加本地轨道失败[${userId}]:`, error)
+    //     }
+    //   })
+    // } else {
+    //   console.warn(`没有本地轨道可添加[${userId}]`)
+    // }
+    console.log('本地流:', this.combinedStream)
+    if (this.combinedStream && this.combinedStream.getTracks().length > 0) {
+      this.combinedStream.getTracks().forEach((track) => {
         console.log(`添加本地轨道[${userId}]:`, track.kind, track.id)
-        peerConnection.addTrack(track, this.localStream!)
+        try {
+          peerConnection.addTrack(track, this.combinedStream)
+        } catch (error) {
+          console.error(`添加本地轨道失败[${userId}]:`, error)
+        }
       })
     } else {
-      console.warn(`没有本地流可添加[${userId}]`)
+      console.warn(`没有本地轨道可添加[${userId}]`)
     }
 
     // 监听远程流
     peerConnection.ontrack = (event) => {
       console.log(`收到远程轨道[${userId}]:`, event.track.kind, event.track.id)
-      // 处理所有接收到的流，而不是只处理第一个
+      // 处理流中的所有轨道
       event.streams.forEach((stream) => {
         this.onRemoteStream(stream, userId)
       })
@@ -317,24 +244,58 @@ class WebRTCMediaService {
         console.log('ICE候选收集完成', userId)
         this.sendSignalMessage(MessageMethod.WebRTC_Ice_Candidate_Method, {
           receiverId: userId,
-          candidate: null // 表示收集完成
+          candidate: null
         })
-        // 即使没有候选，也要确保发送完成信号
-        // if (peerConnection.iceGatheringState === 'complete') {
-        //   console.log('ICE收集已完全完成，无需更多候选', userId)
-        // }
       }
     }
 
-    // 添加连接检查
-    setTimeout(() => {
-      console.log(`5秒后检查连接状态[${userId}]:`, {
-        iceGatheringState: peerConnection.iceGatheringState,
-        iceConnectionState: peerConnection.iceConnectionState,
-        connectionState: peerConnection.connectionState,
-        signalingState: peerConnection.signalingState
-      })
-    }, 5000)
+    // 配置WebRTC连接状态变化监听
+    peerConnection.onconnectionstatechange = () => {
+      console.log(`连接状态变化[${userId}]:`, peerConnection.connectionState)
+      switch (peerConnection.connectionState) {
+        case 'connected':
+          console.log(`WebRTC连接已建立[${userId}]`)
+          break
+        case 'disconnected':
+          console.warn(`WebRTC连接断开[${userId}]`)
+          break
+        case 'failed':
+          console.error(`WebRTC连接失败[${userId}]`)
+          break
+        case 'closed':
+          console.log(`WebRTC连接已关闭[${userId}]`)
+          break
+      }
+    }
+
+    //  ICE连接状态变化监听
+    peerConnection.oniceconnectionstatechange = () => {
+      console.log(`ICE连接状态变化[${userId}]:`, peerConnection.iceConnectionState)
+      if (peerConnection.iceConnectionState === 'failed') {
+        console.error(`ICE连接失败[${userId}]`)
+        // 可以尝试重新连接或提示用户
+      }
+    }
+
+    // ICE错误监听
+    peerConnection.onicecandidateerror = (event) => {
+      console.error(`ICE候选收集错误[${userId}]:`, event.errorCode, event.errorText, event.url)
+    }
+
+    // peerConnection.onsignalingstatechange = () => {
+    //   console.log(`信令状态变化[${userId}]:`, peerConnection.signalingState)
+    // }
+
+    // 添加ICE收集状态监听
+    // peerConnection.onicegatheringstatechange = () => {
+    //   console.log(`ICE收集状态[${userId}]:`, peerConnection.iceGatheringState)
+    //   if (peerConnection.iceGatheringState === 'complete') {
+    //     console.log(`ICE候选收集完成[${userId}]`)
+    //   }
+    // }
+
+    // 存储WebRTC连接实例用于全局管理
+    console.log(`成功为目标用户(${userId})创建WebRTC连接实例`)
     this.peerConnections[userId] = peerConnection
     return peerConnection
   }
@@ -343,6 +304,9 @@ class WebRTCMediaService {
   async createOffer(receiverId: string) {
     console.log('接收到Ws的推送:新成员加入:', receiverId)
     console.log('创建Offer信令:', receiverId)
+
+    console.log('createOffer获取组合流')
+    console.log(this.combinedStream)
 
     // 如果发送Offer信令前未声明连接对象，则创建新的 RTCPeerConnection
     if (!this.peerConnections[receiverId]) {
@@ -376,6 +340,8 @@ class WebRTCMediaService {
   // 注册处理函数到ws
   private initSocketListeners() {
     this.socket.registerHandlers(MessageMethod.WebRTC_Create_Method, (data) => {
+      console.log('接收到创建Offer信令:', data)
+      console.log(this.combinedStream)
       this.createOffer(data.receiverId)
     })
 
@@ -407,6 +373,7 @@ class WebRTCMediaService {
       // 根据请求方ID建立WebRTC连接实例
       const peerConnection = await this.createPeerConnection(data.senderId)
       await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer))
+
       // 根据连接实例创建 Answer 信令
       const answer = await peerConnection.createAnswer()
       await peerConnection.setLocalDescription(answer)
@@ -548,4 +515,5 @@ class WebRTCMediaService {
   }
 }
 
+// 转由主进程处理
 export const webRTCMediaService = new WebRTCMediaService()
