@@ -2,11 +2,13 @@
 
 一个基于 Electron、Vue 3 和 TypeScript 构建的实时音视频通讯和屏幕共享会议客户端应用。
 
+GoMeeting后端项目的效果呈现，后端代码见 [基于Go-Zero的视频会议与实时通信微服务系统](https://github.com/M00100111/GoMeeting)
+
 ## 效果展示
 
 **登录和注册界面**
 
-<img src="README.assets/LoginAndRegister-1761141717260-2.gif" alt="LoginAndRegister" style="zoom:50%;" />
+<img src="README.assets/LoginAndRegister.gif" alt="LoginAndRegister" style="zoom:50%;" />
 
 **主界面**
 
