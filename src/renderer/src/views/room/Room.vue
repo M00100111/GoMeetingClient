@@ -4,10 +4,10 @@
       <RoomHeader/>
       <RoomMain/>
       <Camera ref="cameraRef" v-if="userInfoStore.userInfo.cameraStatus === true" />
+      <Screen ref="screenRef" v-if="userInfoStore.userInfo.screenStatus === true" />
       <!-- 只有当数据加载完成后再渲染 RoomFooter -->
       <RoomFooter v-if="dataLoaded"/>
       <Micro ref="microRef" v-if="userInfoStore.userInfo.micStatus === true" />
-      <Screen ref="screenRef" v-if="userInfoStore.userInfo.screenStatus === true" />
     </div>
     <!-- 普通确认模态框 (在父组件中挂载) -->
     <BaseDialog

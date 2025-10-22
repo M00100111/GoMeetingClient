@@ -8,6 +8,7 @@ declare module '*.vue' {
 
 export interface MyAPI {
   resizeWindow: (width: number, height: number) => void
+  getDesktopSources: (options: Electron.SourcesOptions) => Promise<Electron.DesktopCapturerSource[]>
 }
 
 declare global {

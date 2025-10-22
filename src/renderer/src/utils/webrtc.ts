@@ -523,6 +523,11 @@ class WebRTCMediaService {
       console.warn('找不到 remote-videos 容器')
       return
     }
+    const remoteAudioContainer = document.getElementById('remote-audios')
+    if (!remoteAudioContainer) {
+      console.warn('找不到 remote-audios 容器')
+      return
+    }
 
     // 监听流中轨道被移除的事件
     stream.onremovetrack = (event) => {
@@ -576,6 +581,7 @@ class WebRTCMediaService {
           mediaElement.playsInline = true // 确保已设置
         }
       } else if (track.kind === 'audio') {
+        console.log('监听远程音频流1:', userId)
         if (!(mediaElement instanceof HTMLAudioElement)) {
           // 移除旧元素（如果存在且类型不匹配）
           if (element) {
@@ -584,7 +590,15 @@ class WebRTCMediaService {
           mediaElement = document.createElement('audio')
           mediaElement.id = elementId
           mediaElement.autoplay = true
-          remoteVideoContainer.appendChild(mediaElement)
+
+          // 添加样式使音频元素不占据布局空间
+          mediaElement.style.position = 'absolute'
+          mediaElement.style.width = '0'
+          mediaElement.style.height = '0'
+          mediaElement.style.opacity = '0'
+          mediaElement.style.pointerEvents = 'none'
+
+          remoteAudioContainer.appendChild(mediaElement)
         }
       }
 

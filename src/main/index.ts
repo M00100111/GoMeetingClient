@@ -1,4 +1,4 @@
-import { app, session, shell, BrowserWindow, ipcMain, globalShortcut } from 'electron'
+import { app, session, shell, BrowserWindow, ipcMain, globalShortcut, desktopCapturer } from 'electron'
 // import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -34,7 +34,10 @@ function createWindow(): void {
       // 添加WebRTC支持所需配置
       webgl: true, // 启用WebGL支持
       experimentalFeatures: true, // 启用实验性功能
-      autoplayPolicy: 'no-user-gesture-required' // 允许自动播放媒体
+      autoplayPolicy: 'no-user-gesture-required', // 允许自动播放媒体
+
+      // 添加桌面捕获支持配置
+      enableBlinkFeatures: 'DesktopCaptureAPI'
     }
   })
 
@@ -91,7 +94,9 @@ function createNewWindow(route: string): void {
       // 添加WebRTC支持所需配置
       webgl: true, // 启用WebGL支持
       experimentalFeatures: true, // 启用实验性功能
-      autoplayPolicy: 'no-user-gesture-required' // 允许自动播放媒体
+      autoplayPolicy: 'no-user-gesture-required', // 允许自动播放媒体
+
+      enableBlinkFeatures: 'DesktopCaptureAPI,DesktopCaptureDisablePermissionChecks'
     }
   })
 
@@ -128,6 +133,10 @@ app.whenReady().then(() => {
   // 添加WebRTC相关配置
   app.commandLine.appendSwitch('disable-features', 'WebRtcHideLocalIpsWithMdns')
   app.commandLine.appendSwitch('enable-features', 'WebRtcEchoCancellation')
+  app.commandLine.appendSwitch('enable-features', 'WebRtcEchoCancellation,DesktopCaptureAPI')
+  app.commandLine.appendSwitch('disable-features', 'WebRtcHideLocalIpsWithMdns')
+  // 添加桌面捕获相关功能开关
+  app.commandLine.appendSwitch('enable-features', 'DesktopCaptureInWebContents')
 
   if (is.dev) {
     // 手动加载 Vue DevTools
@@ -187,6 +196,19 @@ app.whenReady().then(() => {
   // IPC 处理：创建窗口
   ipcMain.handle('create-new-window', async (_event, route: string) => {
     return createNewWindow(route)
+  })
+
+  // 添加 IPC 处理：获取桌面源
+  ipcMain.handle('get-desktop-sources', async (_event, options: Electron.SourcesOptions) => {
+    try {
+      console.log('获取桌面源:', options);
+      const sources = await desktopCapturer.getSources(options);
+      console.log('获取到的桌面源:', sources);
+      return sources;
+    } catch (error) {
+      console.error('获取桌面源失败:', error);
+      throw error;
+    }
   })
 
   // 注册F12快捷键打开开发者工具

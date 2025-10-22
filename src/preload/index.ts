@@ -19,7 +19,11 @@ if (process.contextIsolated) {
       },
       minimizeWindow: () => ipcRenderer.send('window-control', 'minimize'),
       closeWindow: () => ipcRenderer.send('window-control', 'close'),
-      createNewWindow: (route: string) => ipcRenderer.invoke('create-new-window', route)
+      createNewWindow: (route: string) => ipcRenderer.invoke('create-new-window', route),
+      // 通过 IPC 调用桌面捕获器API
+      getDesktopSources: (options: Electron.SourcesOptions) => {
+        return ipcRenderer.invoke('get-desktop-sources', options)
+      }
     })
   } catch (error) {
     console.error(error)
@@ -29,4 +33,18 @@ if (process.contextIsolated) {
   window.electron = electronAPI
   // @ts-ignore (define in dts)
   window.api = api
+  // @ts-ignore (define in dts)
+  window.MyAPI = {
+    resizeWindow: (width: number, height: number) => {
+      console.log('MyAPI', width, height)
+      ipcRenderer.send('resize-window', width, height)
+    },
+    minimizeWindow: () => ipcRenderer.send('window-control', 'minimize'),
+    closeWindow: () => ipcRenderer.send('window-control', 'close'),
+    createNewWindow: (route: string) => ipcRenderer.invoke('create-new-window', route),
+    // 通过 IPC 调用桌面捕获器API
+    getDesktopSources: (options: Electron.SourcesOptions) => {
+      return ipcRenderer.invoke('get-desktop-sources', options)
+    }
+  }
 }
