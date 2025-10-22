@@ -6,6 +6,8 @@
 
 <script setup lang="ts" name="Micro">
 import { ref, onMounted, onUnmounted } from 'vue';
+// WebRTC
+import { webRTCMediaService } from '@/utils/webrtc'
 
 const audioStream = ref<MediaStream | null>(null);
 
@@ -14,16 +16,13 @@ const getAllMicrophoneDevices = async () => {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const audioDevices = devices.filter(device => device.kind === 'audioinput');
+    console.log('麦克风设备列表:', audioDevices);
     return audioDevices;
   } catch (error) {
     console.error('获取麦克风设备列表失败:', error);
     return [];
   }
 };
-onMounted(async () => {
-  const audioDevices = await getAllMicrophoneDevices();
-  console.log('麦克风设备列表:', audioDevices);
-});
 
 // 获取指定标签的麦克风设备或随机选择一个
 const getSpecificMicrophoneDevice = async () => {
@@ -71,6 +70,10 @@ const getMicrophoneStream = async () => {
     const stream = await navigator.mediaDevices.getUserMedia(constraints);
     audioStream.value = stream;
     
+    // 将麦克风流注册到 WebRTC 服务
+    console.log('将麦克风流注册到 WebRTC 服务');
+    webRTCMediaService.registerAudioStream(stream);
+    
     console.log('麦克风已启动');
     return stream;
   } catch (error) {
@@ -82,7 +85,13 @@ const getMicrophoneStream = async () => {
 // 停止麦克风流
 const stopMicrophoneStream = () => {
   if (audioStream.value) {
-    audioStream.value.getTracks().forEach(track => track.stop());
+    // 从WebRTC服务中移除麦克风轨道
+    audioStream.value.getAudioTracks().forEach(track => {
+      // 停止轨道
+      track.stop();
+      // 通知WebRTC服务移除轨道
+      webRTCMediaService.removeTrackByTypeAndId('microphone', track.id);
+    });
     audioStream.value = null;
   }
 };
@@ -96,13 +105,21 @@ defineExpose({
 });
 
 onMounted(async () => {
+  const audioDevices = await getAllMicrophoneDevices();
+  console.log(`检测到 ${audioDevices.length} 个麦克风设备`);
   await getMicrophoneStream();
 });
 
-// 添加 onUnmounted 钩子，在组件卸载时停止麦克风流
+// 添加 onUnmounted 钱钩子，在组件卸载时停止麦克风流
 onUnmounted(() => {
   if (audioStream.value) {
-    audioStream.value.getTracks().forEach(track => track.stop());
+    // 从WebRTC服务中移除麦克风轨道
+    audioStream.value.getAudioTracks().forEach(track => {
+      // 停止轨道
+      track.stop();
+      // 通知WebRTC服务移除轨道
+      webRTCMediaService.removeTrackByTypeAndId('microphone', track.id);
+    });
     audioStream.value = null;
   }
 });

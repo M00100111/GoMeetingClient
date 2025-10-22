@@ -120,6 +120,10 @@ class WebRTCMediaService {
     audioStream: MediaStream,
     streamType: 'microphone' | 'system_audio' = 'microphone'
   ) {
+    const userInfoStore = useUserInfoStore()
+    const currentUserId = userInfoStore.userId
+    const roomStore = useRoomStore()
+
     // 遍历传入的音频流中的所有音频轨道
     audioStream.getAudioTracks().forEach((track) => {
       // 为轨道添加类型标识
@@ -129,22 +133,34 @@ class WebRTCMediaService {
       this.combinedStream.addTrack(track)
     })
 
-    // 更新所有连接中的轨道并触发重新协商
-    Object.values(this.peerConnections).forEach((pc) => {
-      audioStream.getAudioTracks().forEach((track) => {
-        const senderExists = pc.getSenders().some((sender) => sender.track === track)
-        if (!senderExists) {
-          try {
-            pc.addTrack(track, this.combinedStream)
-            console.log(`成功添加音频轨道(${streamType})到连接`)
-            // 触发重新协商
-            this.triggerRenegotiation(pc)
-          } catch (error) {
-            console.warn(`添加音频轨道(${streamType})到连接失败:`, error)
+    // 遍历房间成员，为每个成员处理连接
+    for (const userId of roomStore.roomMembers.keys()) {
+      // 跳过当前用户自己
+      if (userId === currentUserId) {
+        continue
+      }
+      // 如果连接已存在，则添加轨道并触发重新协商
+      if (this.peerConnections[userId]) {
+        audioStream.getAudioTracks().forEach((track) => {
+          const senderExists = this.peerConnections[userId]
+            .getSenders()
+            .some((sender) => sender.track === track)
+          if (!senderExists) {
+            try {
+              this.peerConnections[userId].addTrack(track, this.combinedStream)
+              console.log(`成功添加音频轨道(${streamType})到连接[${userId}]`)
+              // 触发重新协商
+              this.triggerRenegotiation(this.peerConnections[userId])
+            } catch (error) {
+              console.warn(`添加音频轨道(${streamType})到连接[${userId}]失败:`, error)
+            }
           }
-        }
-      })
-    })
+        })
+      } else {
+        // 如果连接不存在，则创建新的Offer
+        this.createOffer(userId)
+      }
+    }
 
     console.log(`音频流(${streamType})已注册到组合流`)
     console.log(this.combinedStream)
@@ -188,6 +204,8 @@ class WebRTCMediaService {
         const sender = pc.getSenders().find((s) => s.track === track)
         if (sender) {
           pc.removeTrack(sender)
+          // 触发重新协商以通知对等方
+          this.triggerRenegotiation(pc)
         }
       })
     })
@@ -504,6 +522,28 @@ class WebRTCMediaService {
     if (!remoteVideoContainer) {
       console.warn('找不到 remote-videos 容器')
       return
+    }
+
+    // 监听流中轨道被移除的事件
+    stream.onremovetrack = (event) => {
+      const removedTrack = event.track
+      console.log(`远程轨道被移除[${userId}]:`, removedTrack.kind, removedTrack.id)
+      console.log('删除对应的显示元素')
+      // 删除对应的显示元素
+      const elementId = `remote-${removedTrack.kind}-${userId}-${removedTrack.id}`
+      const element = document.getElementById(elementId)
+      if (element) {
+        element.remove()
+        console.log(`已删除远程${removedTrack.kind}元素:`, elementId)
+      } else {
+        // 尝试查找不带trackId的元素（兼容旧版本）
+        const simpleElementId = `remote-${removedTrack.kind}-${userId}`
+        const simpleElement = document.getElementById(simpleElementId)
+        if (simpleElement) {
+          simpleElement.remove()
+          console.log(`已删除远程${removedTrack.kind}元素:`, simpleElementId)
+        }
+      }
     }
 
     // 为流中的每个轨道创建独立的显示元素

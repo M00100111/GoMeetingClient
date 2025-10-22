@@ -98,7 +98,13 @@ const getCameraStream = async () => {
 // 停止摄像头流
 const stopCameraStream = () => {
   if (cameraStream.value) {
-    cameraStream.value.getTracks().forEach(track => track.stop());
+    // 从WebRTC服务中移除摄像头轨道
+    cameraStream.value.getVideoTracks().forEach(track => {
+      // 停止轨道
+      track.stop();
+      // 通知WebRTC服务移除轨道
+      webRTCMediaService.removeTrackByTypeAndId('camera', track.id);
+    });
     cameraStream.value = null;
   }
   if (videoRef.value) {
@@ -166,7 +172,13 @@ onMounted(async () => {
 // 添加 onUnmounted 钩子，在组件卸载时停止摄像头流
 onUnmounted(() => {
   if (cameraStream.value) {
-    cameraStream.value.getTracks().forEach(track => track.stop());
+    // 从WebRTC服务中移除摄像头轨道
+    cameraStream.value.getVideoTracks().forEach(track => {
+      // 停止轨道
+      track.stop();
+      // 通知WebRTC服务移除轨道
+      webRTCMediaService.removeTrackByTypeAndId('camera', track.id);
+    });
     cameraStream.value = null;
   }
   if (videoRef.value) {
