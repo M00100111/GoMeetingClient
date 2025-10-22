@@ -22,15 +22,17 @@
 
 **实时音视频通讯与屏幕共享**
 
-*因gif画质压缩导致画面较为模糊*
+*已实现多人实时音视频通讯，因设备不足暂不提供演示*
+
+*因gif画质压缩导致画面较为模糊，若加载不出来请查看 README.assets 文件夹*
 
 客户端A开启摄像头与麦克风同时接收客户端B的屏幕共享
 
-<img src="README.assets/客户端A开启摄像头与麦克风.gif" alt="客户端A开启摄像头与麦克风" style="zoom:50%;" />
+<img src="README.assets/客户端A开启麦克风摄像头.gif" alt="客户端A开启麦克风摄像头" style="zoom:50%;" />
 
 客户端B进行屏幕共享同时接收客户端A的摄像头与语音信息
 
-<img src="README.assets/客户端B开启屏幕共享.gif" alt="客户端B开启屏幕共享" style="zoom: 33%;" />
+<img src="README.assets/客户端B开启屏幕共享-1761143844797-4.gif" alt="客户端B开启屏幕共享" style="zoom: 67%;" />
 
 ## 功能特性
 
