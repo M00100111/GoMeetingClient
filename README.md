@@ -32,7 +32,7 @@
 
 客户端B进行屏幕共享同时接收客户端A的摄像头与语音信息
 
-<img src="README.assets/客户端B开启屏幕共享-1761143844797-4.gif" alt="客户端B开启屏幕共享" style="zoom: 67%;" />
+<img src="README.assets/客户端B开启屏幕共享.gif" alt="客户端B开启屏幕共享" style="zoom: 67%;" />
 
 ## 功能特性
 
